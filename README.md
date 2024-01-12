@@ -2,7 +2,7 @@
 # PROJECT NAME TO BE DEFINED
 # Group information
 * Student 1. Aleksi Rehu arehu20@student.oulu.fi
-* Student 2. Arimo Pukari apukari@oulu.fi
+* Student 2. Arimo Pukari apukari@student.oulu.fi
 * Student 3. Santeri Heikkinen saheikki20@student.oulu.fi
 * Student 4. Tomi Pantsar tpantsar20@student.oulu.fi
 
