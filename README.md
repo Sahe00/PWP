@@ -1,5 +1,5 @@
 # PWP SPRING 2024
-# PROJECT NAME TO BE DEFINED
+# ONLINE STORE API
 # Group information
 * Student 1. Aleksi Rehu arehu20@student.oulu.fi
 * Student 2. Arimo Pukari apukari@student.oulu.fi
