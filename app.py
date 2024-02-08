@@ -18,7 +18,7 @@ class Order(db.Model):
     customerId = db.Column(db.Integer, db.ForeignKey('customer.id'))
     customer = db.relationship('Customer', backref=db.backref('orders', lazy=True))
 
-class Product_order(db.Model):
+class ProductOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     orderId = db.Column(db.Integer, db.ForeignKey('order.id'))
     productId = db.Column(db.Integer, db.ForeignKey('product.id'))
