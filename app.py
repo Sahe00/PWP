@@ -19,7 +19,7 @@ class Customer(db.Model):
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customerId = db.Column(db.Integer, db.ForeignKey('customer.id'))
-    createdAt = db.Column(db.TimeStamp)
+    createdAt = db.Column(db.String(50))
 
     customer = db.relationship('Customer', back_populates="orders")
     productOrder = db.relationship('ProductOrder', back_populates="order")
