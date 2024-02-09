@@ -11,3 +11,12 @@ __Remember to include all required documentation and HOWTOs, including how to cr
 # How to start
 ## Required libraries are in requirements.txt
     pip install -r requirements.txt
+
+## Setup database
+### To create an empty database, run this:
+
+    python createdatabase.py
+
+### To create database with test data, run this:
+
+    python createdatabase.py fill
