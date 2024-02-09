@@ -8,15 +8,31 @@
 
 __Remember to include all required documentation and HOWTOs, including how to create and populate the database, how to run and test the API, the url to the entrypoint and instructions on how to setup and run the client__
 
+<!--
+Instructions how to setup the database framework and external libraries you might have used, or a link where it is clearly explained.
+Instructions on how to setup and populate the database.
+-->
+
+# Information
+
+## Library versions
+
+We use Flask SQLAlchemy's version of SQLite. 
+
+Flask version: 3.0.1
+
+Flask SQLAlchemy version: 3.1.1
+
 # How to start
 ## Required libraries are in requirements.txt
     pip install -r requirements.txt
 
 ## Setup database
-### To create an empty database, run this:
 
+__Only one of the following should be run.__
+
+### To create an empty database, run this:
     python createdatabase.py
 
 ### To create database with test data, run this:
-
     python createdatabase.py fill
