@@ -7,12 +7,15 @@ from app import Customer, Order, Product, Stock, ProductOrder
 # This script creates the database and tables. It should be run once before running the app.
 
 def create_db(arg):
+    s = ""
     ctx = app.app_context()
     ctx.push()
     db.create_all()
     if arg == "fill":
         add_rows()
+        s += "with fill"
     ctx.pop()
+    print(f"Created database {s}")
 
 def add_rows():
 
@@ -77,11 +80,13 @@ def add_rows():
     db.session.commit()
 
 def main():
-    if sys.argv[1] == "fill":
-        create_db("fill")
-    else:
+    try:
+        if sys.argv[1] == "fill": #  python createdatabase.py fill
+            create_db("fill")
+        else:
+            print("Wrong argument")
+    except IndexError: #  python createdatabase.py
         create_db("")
-        
-        
+
 if __name__ == "__main__":
     main()
