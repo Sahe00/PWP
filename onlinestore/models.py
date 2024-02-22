@@ -1,11 +1,5 @@
-import json
-from flask import Flask, request
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+from flask.cli import with_appcontext
+from onlinestore import db
 
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
