@@ -1,4 +1,5 @@
 import sys
+import os
 from datetime import datetime
 from app import app
 from app import db
@@ -7,6 +8,10 @@ from app import Customer, Order, Product, Stock, ProductOrder
 # This script creates the database and tables. It should be run once before running the app.
 
 def create_db(arg):
+    # Delete test.db if it exists
+    if os.path.exists("instance/test.db"):
+        os.remove("instance/test.db")
+
     s = ""
     ctx = app.app_context()
     ctx.push()
@@ -68,13 +73,13 @@ def add_rows():
     db.session.add_all(
         [
             antti,
-            satikka,
-            kumpparit,
-            antin_tilaus,
-            antin_tuote_1,
-            antin_tuote_2,
-            satikkavarasto,
-            kumpparivarasto
+            # satikka,
+            # kumpparit,
+            # antin_tilaus,
+            # antin_tuote_1,
+            # antin_tuote_2,
+            # satikkavarasto,
+            # kumpparivarasto
         ]
     )
     db.session.commit()
