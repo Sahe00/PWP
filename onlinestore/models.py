@@ -1,8 +1,11 @@
+import uuid
+import click
 from flask.cli import with_appcontext
 from onlinestore import db
 
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
+    uuid = db.Column(db.String(36), default=str(uuid.uuid4()), unique=True, nullable=False)
     firstName = db.Column(db.String(50), nullable=False)
     lastName = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), nullable=True)
@@ -44,3 +47,9 @@ class Stock(db.Model):
     quantity = db.Column(db.Integer)
 
     stockProduct = db.relationship('Product', back_populates="stock")
+
+
+@click.command("init-db")
+@with_appcontext
+def init_db_command():
+    db.create_all()
