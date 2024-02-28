@@ -42,10 +42,6 @@ class CustomerCollection(Resource):
                 customer = Customer(firstName=firstName, lastName=lastName, email=email, phone=phone)
                 db.session.add(customer)
                 db.session.commit()
-                print(customer.uuid) #TESTING
-                print("haloo") #TESTING
-
-
 
                 customer_uri = url_for("api.customercollection", uuid=customer.uuid)
 
@@ -77,6 +73,7 @@ class CustomerItem(Resource):
 
         try:
             customer = db.session.query(Customer).filter(Customer.uuid == uuid).first()
+            # customer = Customer.query.filter_by(firstName=uuid).first()
 
             #customer.firstName = request.json["firstName"]
             #customer.lastName = request.json["lastName"]
