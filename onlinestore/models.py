@@ -5,13 +5,28 @@ from onlinestore import db
 
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    uuid = db.Column(db.String(36), default=str(uuid.uuid4()), unique=True, nullable=False)
+    uuid = db.Column(db.String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     firstName = db.Column(db.String(50), nullable=False)
     lastName = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), nullable=True)
     phone = db.Column(db.String(50), nullable=True)
 
     orders = db.relationship('Order', back_populates="customer")
+
+    def serialize(self):
+        return {
+            'uuid': self.uuid,
+            'firstName': self.firstName,
+            'lastName': self.lastName,
+            'email': self.email,
+            'phone': self.phone
+        }
+
+    def deserialize(self, data):
+        self.firstName = data.get('firstName')
+        self.lastName = data.get('lastName')
+        self.email = data.get('email')
+        self.phone = data.get('phone')
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -41,6 +56,13 @@ class Product(db.Model):
 
     products = db.relationship('ProductOrder', back_populates="product")
     stock = db.relationship('Stock', cascade="all, delete-orphan", back_populates="stockProduct")
+
+    def serialize(self):
+        return {
+            "name": self.name,
+            "desc": self.desc,
+            "price": self.price
+        }
 
 class Stock(db.Model):
     productId = db.Column(db.Integer, db.ForeignKey('product.id', ondelete="CASCADE"), primary_key=True, nullable=False)
