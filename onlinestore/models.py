@@ -64,6 +64,11 @@ class Product(db.Model):
             "price": self.price
         }
 
+    def deserialize(self, data):
+        self.name = data.get('name')
+        self.desc = data.get('desc')
+        self.price = data.get('price')
+
 class Stock(db.Model):
     productId = db.Column(db.Integer, db.ForeignKey('product.id', ondelete="CASCADE"), primary_key=True, nullable=False)
     quantity = db.Column(db.Integer)

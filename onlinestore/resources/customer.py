@@ -28,18 +28,21 @@ class CustomerCollection(Resource):
             if firstName is None:
                 return "Request content type must be JSON", 415
             try:
-                firstName = request.json["firstName"]
-                lastName = request.json["lastName"]
-                email = request.json["email"] # client will send as null if customer does not have an email
-                if email == "":
-                    email = None
-                phone = request.json["phone"] # same with phone
-                if phone == "":
-                    phone = None
+                # firstName = request.json["firstName"]
+                # lastName = request.json["lastName"]
+                # email = request.json["email"] # client will send as null if customer does not have an email
+                # if email == "":
+                #     email = None
+                # phone = request.json["phone"] # same with phone
+                # if phone == "":
+                #     phone = None
+                customer = Customer()
+                customer.deserialize(request.json)
             except ValueError:
                 return "Invalid request body", 400
             try:
-                customer = Customer(firstName=firstName, lastName=lastName, email=email, phone=phone)
+                # customer = Customer(firstName=firstName, lastName=lastName, email=email, phone=phone)
+                # customer.deserialize(request.json)
                 db.session.add(customer)
                 db.session.commit()
 
@@ -54,38 +57,25 @@ class CustomerCollection(Resource):
 
 
 class CustomerItem(Resource):
-    def get(self, uuid):
-        return uuid.serialize()
+    def get(self, customer):
+        return customer.serialize()
 
-    def delete(self, uuid):
+    def delete(self, customer):
         try:
-            # customer = db.session.query(Customer).filter(Customer.uuid == uuid).first()
-            db.session.delete(uuid)
+            db.session.delete(customer)
             db.session.commit()
 
             return Response(status=204)
         except IntegrityError:
             return "Customer not found", 404
 
-    def put(self, uuid):
+    def put(self, customer):
         if not request.json:
             return "Unsupported media type", 415
 
         try:
-            customer = db.session.query(Customer).filter(Customer.uuid == uuid).first()
-            # customer = Customer.query.filter_by(firstName=uuid).first()
-
-            #customer.firstName = request.json["firstName"]
-            #customer.lastName = request.json["lastName"]
-            #customer.email = request.json["email"]
-            #customer.phone = request.json["phone"]
-
-            # Update customer details
-            customer.firstName = request.json.get("firstName", customer.firstName)
-            customer.lastName = request.json.get("lastName", customer.lastName)
-            customer.email = request.json.get("email", customer.email)
-            customer.phone = request.json.get("phone", customer.phone)
-
+            customer.deserialize(request.json)
+            db.session.add(customer)
             try:
                 db.session.commit()
             except IntegrityError:
