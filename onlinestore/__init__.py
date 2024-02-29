@@ -11,9 +11,10 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
 
-    from .utils import ProductConverter, CustomerConverter
+    from .utils import ProductConverter, CustomerConverter, OrderConverter
     app.url_map.converters['product'] = ProductConverter
     app.url_map.converters['customer'] = CustomerConverter
+    app.url_map.converters['order'] = OrderConverter
 
     from . import api, models
     app.cli.add_command(models.init_db_command)

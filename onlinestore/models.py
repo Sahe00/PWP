@@ -39,6 +39,17 @@ class Order(db.Model):
     customer = db.relationship('Customer', back_populates="orders")
     productOrder = db.relationship('ProductOrder', cascade="all, delete-orphan", back_populates="order")
 
+    def serialize(self):
+        return {
+            'id': self.id, # Is this necessary?
+            'customerId': self.customerId,
+            'createdAt': self.createdAt
+        }
+
+    def deserialize(self, data):
+        self.customerId = data.get('customerId')
+        self.createdAt = data.get('createdAt')
+
 class ProductOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     orderId = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), nullable=False)

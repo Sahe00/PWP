@@ -1,6 +1,6 @@
 from werkzeug.routing import BaseConverter
 from werkzeug.exceptions import NotFound, Conflict, BadRequest, UnsupportedMediaType
-from onlinestore.models import Product, Customer
+from onlinestore.models import Product, Customer, Order
 
 
 class ProductConverter(BaseConverter):
@@ -22,3 +22,13 @@ class CustomerConverter(BaseConverter):
 
     def to_url(self, db_customer):  # used in reverse routing
         return db_customer.uuid
+
+class OrderConverter(BaseConverter):
+    def to_python(self, id):  # used in routing
+        db_order = Order.query.filter_by(id=id).first()
+        if db_order is None:
+            raise NotFound
+        return db_order
+
+    def to_url(self, db_order):  # used in reverse routing
+        return db_order.id
