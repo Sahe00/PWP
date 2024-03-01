@@ -84,13 +84,13 @@ def add_rows():
     db.session.add_all(
         [
             antti,
-            # satikka,
-            # kumpparit,
-            # antin_tilaus,
-            # antin_tuote_1,
-            # antin_tuote_2,
-            # satikkavarasto,
-            # kumpparivarasto
+            satikka,
+            kumpparit,
+            antin_tilaus,
+            antin_tuote_1,
+            antin_tuote_2,
+            satikkavarasto,
+            kumpparivarasto
         ]
     )
     db.session.commit()

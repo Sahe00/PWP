@@ -44,7 +44,7 @@ class ProductCollection(Resource):
                 db.session.add(product)
                 db.session.commit()
 
-                product_uri = url_for("api.productitem", name=product.name)
+                product_uri = url_for("api.productcollection", name=product.name)
 
                 return Response(status=201, headers={"Location": product_uri})  # Created
             except Exception as e:  # IntegrityError:
