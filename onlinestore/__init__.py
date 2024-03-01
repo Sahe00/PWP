@@ -5,10 +5,17 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-def create_app():
+
+def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    if test_config is None:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+    else:
+        # For testing purposes
+        app.config.from_mapping(test_config)
+        
     db.init_app(app)
 
     from .utils import ProductConverter, CustomerConverter, OrderConverter, ProductOrderConverter, StockConverter
@@ -21,7 +28,6 @@ def create_app():
     from . import api, models
     app.cli.add_command(models.init_db_command)
     app.register_blueprint(api.api_bp, url_prefix='/api')
-
 
     return app
 

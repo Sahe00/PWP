@@ -1,8 +1,11 @@
 import json
 import os
+import uuid
+from flask_sqlalchemy import SQLAlchemy
 import pytest
 import tempfile
 import time
+import createdatabase
 from datetime import datetime
 from flask.testing import FlaskClient
 from jsonschema import validate
@@ -10,9 +13,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError, StatementError
 from werkzeug.datastructures import Headers
-
 from onlinestore import create_app, db
-#from onlinestore.models import Customer, Order, Product, ProductOrder, Stock
+from onlinestore.models import Customer
 
 
 @event.listens_for(Engine, "connect")
@@ -25,17 +27,19 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 # based on http://flask.pocoo.org/docs/1.0/testing/
 @pytest.fixture
 def client():
+    # Create a temporary database file for testing purposes
     db_fd, db_fname = tempfile.mkstemp()
-    #config = {
-    #    "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname,
-    #    "TESTING": True
-    #}
-    
-    app = create_app()
+    config = {
+        #"SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname,
+        "SQLALCHEMY_DATABASE_URI": 'sqlite:///temp.db',
+        "TESTING": True
+    }
+    app = create_app(config)
     
     with app.app_context():
-        db.create_all()
-    #    _populate_db()
+        createdatabase.create_test_db(app)
+        #db.create_all()
+        #_populate_db()
         
     #app.test_client_class = AuthHeaderClient
     yield app.test_client()
@@ -44,11 +48,29 @@ def client():
     os.unlink(db_fname)
     
     
+def _populate_db():
+    for i in range(1, 4):
+        customer = Customer(
+            firstName="test-sensor-{}".format(i),
+            lastName="testsensor",
+            email="testEmail-{}".format(i),
+            phone="testPhone-{}".format(i)
+        )
+        db.session.add(customer)
+        
+    #db_key = ApiKey(
+    #    key=ApiKey.key_hash(TEST_KEY),
+    #    admin=True
+    #)
+    #db.session.add(db_key)        
+    db.session.commit()
+    
+    
 def _get_customer_json(number=1):
     """
     Creates a valid customer JSON object to be used for PUT and POST tests.
     """
-    
+    #uuid = uuid.uuid4()
     customer = {
         "firstName": "Paavo-{}".format(number),
         "lastName": "Nurmi-{}".format(number),
@@ -67,9 +89,9 @@ class TestCustomerCollection(object):
         assert resp.status_code == 200
         body = json.loads(resp.data)
         
-        # firstName, lastName, email, phone
-        assert len(body["c_info"]) == 4
-        for item in body["c_info"]:
+        for item in body:
+            # firstName, lastName, email, phone
+            assert len(item) == 4
             assert "firstName" in item
             assert "lastName" in item
             assert "email" in item
@@ -92,7 +114,7 @@ class TestCustomerCollection(object):
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 201
-        # assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
+        #assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
         
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
