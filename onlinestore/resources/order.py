@@ -21,7 +21,27 @@ class OrderCollection(Resource):
             return f"Error: {e}", 500
 
     def post(self):
-        pass
+        try:
+            customerId = request.json["customerId"]
+            if customerId is None:
+                return "Request content type must be JSON", 415
+            try:
+                order = Order()
+                order.deserialize(request.json)
+            except ValueError:
+                return "Invalid request body", 400
+            try:
+                db.session.add(order)
+                db.session.commit()
+
+                order_uri = url_for("api.ordercollection", id=order.id)
+
+                return Response(status=201, headers={"Location": order_uri})
+            except Exception as e:  # IntegrityError:
+                db.session.rollback()
+                return f"Incomplete request - missing fields - {e}", 500
+        except (KeyError, ValueError):
+            return "Invalid request body", 400
 
     def delete(self):
         pass
