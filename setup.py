@@ -11,6 +11,7 @@ setup(
         "flask-restful",
         "flask-sqlalchemy",
         "pytest",
+        "pytest-coverage",
         "jsonschema",
     ],
 )
