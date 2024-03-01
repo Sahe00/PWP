@@ -33,14 +33,6 @@ class CustomerCollection(Resource):
             if db.session.query(Customer).filter(Customer.email == email).first():
                 return "Customer with this email already exists", 409
             try:
-                # firstName = request.json["firstName"]
-                # lastName = request.json["lastName"]
-                # email = request.json["email"] # client will send as null if customer does not have an email
-                # if email == "":
-                #     email = None
-                # phone = request.json["phone"] # same with phone
-                # if phone == "":
-                #     phone = None
                 customer = Customer()
                 customer.deserialize(request.json)
             except ValueError:

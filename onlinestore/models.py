@@ -40,7 +40,7 @@ class Order(db.Model):
 
     def serialize(self):
         return {
-            'id': self.id, # Is this necessary?
+            'id': self.id,
             'customerId': self.customerId,
             'createdAt': self.createdAt
         }
@@ -60,7 +60,7 @@ class ProductOrder(db.Model):
 
     def serialize(self):
         return {
-            'id': self.id, # Is this necessary?
+            'id': self.id,
             'orderId': self.orderId,
             'productId': self.productId,
             'quantity': self.quantity
@@ -97,6 +97,16 @@ class Stock(db.Model):
     quantity = db.Column(db.Integer)
 
     stockProduct = db.relationship('Product', back_populates="stock")
+
+    def serialize(self):
+        return {
+            "productId": self.productId,
+            "quantity": self.quantity
+        }
+
+    def deserialize(self, data):
+        self.productId = data.get('productId')
+        self.quantity = data.get('quantity')
 
 
 @click.command("init-db")

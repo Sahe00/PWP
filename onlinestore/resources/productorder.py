@@ -33,7 +33,7 @@ class ProductOrderCollection(Resource):
                 db.session.add(productOrder)
                 db.session.commit()
 
-                productOrder_uri = url_for("api.productordercollection", id=productOrder_uri.id)
+                productOrder_uri = url_for("api.productordercollection", id=productOrder.id)
 
                 return Response(status=201, headers={"Location": productOrder_uri})
             except Exception as e:  # IntegrityError:
@@ -42,8 +42,31 @@ class ProductOrderCollection(Resource):
         except (KeyError, ValueError):
             return "Invalid request body", 400
 
-    def delete(self):
-        pass
+class ProductOrderItem(Resource):
+    def get(self, productorder):
+        return productorder.serialize(), 200
 
-    def put(self):
-        pass
+    def delete(self, productorder):
+        try:
+            db.session.delete(productorder)
+            db.session.commit()
+
+            return Response(status=204)
+        except IntegrityError:
+            return "Customer not found", 404
+
+    def put(self, productorder):
+        if not request.json:
+            return "Unsupported media type", 415
+
+        try:
+            productorder.deserialize(request.json)
+            db.session.add(productorder)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                return "Database error", 500
+
+            return Response(status=200)
+        except IntegrityError:
+            return "Customer not found", 404

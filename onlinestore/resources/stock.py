@@ -6,7 +6,7 @@ from onlinestore.models import Stock
 
 
 class StockCollection(Resource):
-    
+
     # Retrieve all products and their stock quantities
     def get(self):
         try:
@@ -21,14 +21,36 @@ class StockCollection(Resource):
             return f"Error: {e}", 500
 
     def post(self):
-        pass
+        try:
+            productId = request.json["productId"]
+            if productId is None:
+                return "Request content type must be JSON", 415
+            if db.session.query(Stock).filter(Stock.productId == productId).first():
+                return "Product already exists", 409
+            try:
+                stock = Stock()
+                Stock.deserialize(request.json)
+            except ValueError:
+                return "Invalid request body", 400
+            try:
+                db.session.add(stock)
+                db.session.commit()
 
-    def delete(self):
-        pass
+                stock_uri = url_for("api.stockitem", productId=stock.productId)
 
+                return Response(status=201, headers={"Location": stock_uri})  # Created
+            except Exception as e:  # IntegrityError:
+                db.session.rollback()
+                return f"Incomplete request - missing fields - {e}", 500
+        except (KeyError, ValueError):
+            return "Invalid request body", 400
 
 class StockItem(Resource):
-    
+
+    # Retrieve stock quantity for a specific product
+    def get(self, product):
+        return product.serialize(), 200
+
     # Update stock quantity
     def put(self, product):
         if not request.json:
