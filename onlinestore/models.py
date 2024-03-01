@@ -8,7 +8,7 @@ class Customer(db.Model):
     uuid = db.Column(db.String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     firstName = db.Column(db.String(50), nullable=False)
     lastName = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(50), nullable=True)
+    email = db.Column(db.String(50), nullable=False, unique=True)
     phone = db.Column(db.String(50), nullable=True)
 
     orders = db.relationship('Order', back_populates="customer")
@@ -23,9 +23,9 @@ class Customer(db.Model):
         }
 
     def deserialize(self, data):
-        self.firstName = data.get('firstName')
-        self.lastName = data.get('lastName')
-        self.email = data.get('email')
+        self.firstName = data['firstName']
+        self.lastName = data['lastName']
+        self.email = data['email']
         self.phone = data.get('phone')
 
 class Order(db.Model):
@@ -33,7 +33,6 @@ class Order(db.Model):
 
     # Set foreign key to null if customer is deleted
     customerId = db.Column(db.Integer, db.ForeignKey('customer.id', ondelete="SET NULL"))
-
     createdAt = db.Column(db.String(50), nullable=False)
 
     customer = db.relationship('Customer', back_populates="orders")
@@ -47,8 +46,8 @@ class Order(db.Model):
         }
 
     def deserialize(self, data):
-        self.customerId = data.get('customerId')
-        self.createdAt = data.get('createdAt')
+        self.customerId = data['customerId']
+        self.createdAt = data['createdAt']
 
 class ProductOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -58,6 +57,19 @@ class ProductOrder(db.Model):
 
     order = db.relationship('Order', back_populates="productOrder")
     product = db.relationship('Product', back_populates="products")
+
+    def serialize(self):
+        return {
+            'id': self.id, # Is this necessary?
+            'orderId': self.orderId,
+            'productId': self.productId,
+            'quantity': self.quantity
+        }
+
+    def deserialize(self, data):
+        self.orderId = data['orderId']
+        self.productId = data['productId']
+        self.quantity = data['quantity']
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)

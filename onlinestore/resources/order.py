@@ -43,21 +43,32 @@ class OrderCollection(Resource):
         except (KeyError, ValueError):
             return "Invalid request body", 400
 
-    def delete(self):
-        pass
-
-    def put(self):
-        pass
 
 class OrderItem(Resource):
-    def get(self):
-        pass
+    def get(self, order):
+        return order.serialize(), 200
 
-    def post(self):
-        pass
+    def delete(self, order):
+        try:
+            db.session.delete(order)
+            db.session.commit()
 
-    def delete(self):
-        pass
+            return Response(status=204)
+        except IntegrityError:
+            return "Customer not found", 404
 
-    def put(self):
-        pass
+    def put(self, order):
+        if not request.json:
+            return "Unsupported media type", 415
+
+        try:
+            order.deserialize(request.json)
+            db.session.add(order)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                return "Database error", 500
+
+            return Response(status=200)
+        except IntegrityError:
+            return "Customer not found", 404

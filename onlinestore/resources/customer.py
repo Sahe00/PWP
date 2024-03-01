@@ -26,9 +26,12 @@ class CustomerCollection(Resource):
     # Creates a new customer to the database
     def post(self):
         try:
-            firstName = request.json["firstName"]
-            if firstName is None:
+            # firstName = request.json["firstName"]
+            email = request.json["email"]
+            if email is None:
                 return "Request content type must be JSON", 415
+            if db.session.query(Customer).filter(Customer.email == email).first():
+                return "Customer with this email already exists", 409
             try:
                 # firstName = request.json["firstName"]
                 # lastName = request.json["lastName"]
@@ -43,8 +46,6 @@ class CustomerCollection(Resource):
             except ValueError:
                 return "Invalid request body", 400
             try:
-                # customer = Customer(firstName=firstName, lastName=lastName, email=email, phone=phone)
-                # customer.deserialize(request.json)
                 db.session.add(customer)
                 db.session.commit()
 
