@@ -8,6 +8,8 @@ from onlinestore.models import Customer, Order, ProductOrder, Product, Stock
 from onlinestore.utils import ProductConverter
 
 # /api/products/
+
+
 class ProductCollection(Resource):
 
     # Retrieves all products from the database and forms a list of them
@@ -15,7 +17,7 @@ class ProductCollection(Resource):
         try:
             result = []
             for product in db.session.query(Product).all():
-                p_info = {"name":"", "desc":"", "price":0.0}
+                p_info = {"name": "", "desc": "", "price": 0.0}
                 p_info["name"] = product.name
                 p_info["desc"] = product.desc
                 p_info["price"] = product.price
@@ -31,24 +33,23 @@ class ProductCollection(Resource):
             if name is None:
                 return "Request content type must be JSON", 415
             if db.session.query(Product).filter(Product.name == name).first():
-                return "Name already exists", 409
+                return "Product already exists", 409
             try:
-                desc = request.json["desc"]
-                price = float(request.json["price"])
+                product = Product()
+                product.deserialize(request.json)
             except ValueError:
                 return "Invalid request body", 400
-
             try:
-                product = Product(name=name, desc=desc, price=price)
+                # product = Product(name=name, desc=desc, price=price)
                 db.session.add(product)
                 db.session.commit()
 
                 product_uri = url_for("api.productitem", name=product.name)
 
-                return Response(status=201, headers={"Location": product_uri})
-            except IntegrityError:
+                return Response(status=201, headers={"Location": product_uri})  # Created
+            except Exception as e:  # IntegrityError:
                 db.session.rollback()
-                return "Incomplete request - missing fields", 500
+                return f"Incomplete request - missing fields - {e}", 500
         except (KeyError, ValueError):
             return "Invalid request body", 400
 
@@ -59,23 +60,6 @@ class ProductItem(Resource):
     # Retrieves information from a specific product
     def get(self, name):
         return name.serialize()
-
-    # def get(self, name):
-    #     try:
-    #         result = []
-    #         product = db.session.query(Product).filter(Product.name == name).first()
-
-    #         if product:
-    #             p_info = {"name":"", "desc":"", "price":0.0}
-    #             p_info["name"] = product.name
-    #             p_info["desc"] = product.desc
-    #             p_info["price"] = product.price
-    #             result.append(p_info)
-    #             return Response(status=200)
-    #         else:
-    #             return "Product not found", 404
-    #     except Exception as e:
-    #         return f"Error: {e}", 500
 
     # Deletes a product from the database
     def delete(self, name):
@@ -93,10 +77,13 @@ class ProductItem(Resource):
             return "Unsupported media type", 415
 
         try:
-            product = db.session.query(Product).filter(Product.name == name).first()
+            name.deserialize(request.json)
+            db.session.add(name)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                return "Database error", 500
 
-            product.name = request.json["name"]
-            product.desc = request.json["desc"]
-            product.price = float(request.json["price"])
+            return Response(status=200)
         except IntegrityError:
             return "Product not found", 404

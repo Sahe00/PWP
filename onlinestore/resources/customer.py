@@ -5,23 +5,25 @@ from flask_restful import Resource
 from onlinestore import db
 from onlinestore.models import Customer, Order, ProductOrder, Product, Stock
 
+
 class CustomerCollection(Resource):
 
     # Returns a list of customers in the database
     def get(self):
         try:
             result = []
-            for product in db.session.query(Customer).all():
-                c_info = {"firstName":"", "lastName":"", "email":"", "phone":""}
-                c_info["firstName"] = product.firstName
-                c_info["lastName"] = product.lastName
-                c_info["email"] = product.email
-                c_info["phone"] = product.phone
+            for customer in db.session.query(Customer).all():
+                c_info = {"firstName": "", "lastName": "", "email": "", "phone": ""}
+                c_info["firstName"] = customer.firstName
+                c_info["lastName"] = customer.lastName
+                c_info["email"] = customer.email
+                c_info["phone"] = customer.phone
                 result.append(c_info)
             return result, 200
         except Exception as e:
             return f"Error: {e}", 500
 
+    # Creates a new customer to the database
     def post(self):
         try:
             firstName = request.json["firstName"]
@@ -49,7 +51,7 @@ class CustomerCollection(Resource):
                 customer_uri = url_for("api.customercollection", uuid=customer.uuid)
 
                 return Response(status=201, headers={"Location": customer_uri})
-            except Exception as e: #IntegrityError:
+            except Exception as e:  # IntegrityError:
                 db.session.rollback()
                 return f"Incomplete request - missing fields - {e}", 500
         except (KeyError, ValueError):
@@ -83,4 +85,4 @@ class CustomerItem(Resource):
 
             return Response(status=200)
         except IntegrityError:
-            return "Product not found", 404
+            return "Customer not found", 404
