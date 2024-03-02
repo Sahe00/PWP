@@ -8,10 +8,15 @@ db = SQLAlchemy()
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        
+    default_config = {
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        "SQLALCHEMY_DATABASE_URI": 'sqlite:///test.db'
+    }
 
     if test_config is None:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+        # For production purposes
+        app.config.from_mapping(default_config)
     else:
         # For testing purposes
         app.config.from_mapping(test_config)

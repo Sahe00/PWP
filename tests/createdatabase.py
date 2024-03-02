@@ -1,20 +1,18 @@
 import sys
 import os
 from datetime import datetime
-from onlinestore import db, create_app
+from onlinestore import db
 from onlinestore.models import Customer, Order, Product, Stock, ProductOrder
 
 
-def create_test_db(app):
+def create_test_db():
+    # Delete temp.db if it exists
     if os.path.exists("instance/temp.db"):
         os.remove("instance/temp.db")
         
-    ctx = app.app_context()
-    ctx.push()
     db.create_all()
-    add_rows()
-    ctx.pop()
-    print(f"Created database")
+    _populate_db()
+    print(f"Created testing database")
 
 
 # This script creates the database and tables. It should be run once before running the app.
@@ -24,16 +22,16 @@ def create_db(arg):
         os.remove("instance/test.db")
 
     s = ""
-    ctx = app.app_context()
-    ctx.push()
+    #ctx = app.app_context()
+    #ctx.push()
     db.create_all()
     if arg == "fill":
-        add_rows()
+        _populate_db()
         s += "with fill"
-    ctx.pop()
+    #ctx.pop()
     print(f"Created database {s}")
 
-def add_rows():
+def _populate_db():
 
     antti = Customer(
         firstName="Antti",

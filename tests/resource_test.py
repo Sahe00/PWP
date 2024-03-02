@@ -8,7 +8,6 @@ import time
 import createdatabase
 from datetime import datetime
 from flask.testing import FlaskClient
-from jsonschema import validate
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError, StatementError
@@ -25,27 +24,26 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 
 # based on http://flask.pocoo.org/docs/1.0/testing/
-@pytest.fixture
+# The fixture is invoked once for each test function that uses it
+@pytest.fixture(scope="function")
 def client():
     # Create a temporary database file for testing purposes
-    db_fd, db_fname = tempfile.mkstemp()
-    config = {
-        # "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname,
+    test_config = {
         "SQLALCHEMY_DATABASE_URI": 'sqlite:///temp.db',
         "TESTING": True
     }
-    app = create_app(config)
+    app = create_app(test_config)
 
     with app.app_context():
-        createdatabase.create_test_db(app)
-        # db.create_all()
-        # _populate_db()
+        createdatabase.create_test_db()
+        client = app.test_client()
 
-    # app.test_client_class = AuthHeaderClient
-    yield app.test_client()
+    yield client
 
-    os.close(db_fd)
-    os.unlink(db_fname)
+    # Teardown after testing
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()  # drop all tables in the database
 
 
 def _populate_db():
@@ -107,13 +105,6 @@ class TestCustomerCollection(object):
             assert "lastName" in item
             assert "email" in item
             assert "phone" in item
-
-        # _check_namespace(client, body)
-        # _check_control_post_method("senhub:add-sensor", client, body)
-        # assert len(body["items"]) == 3
-        # for item in body["items"]:
-        #    _check_control_get_method("self", client, item)
-        #    _check_control_get_method("profile", client, item)
 
     def test_post(self, client):
         valid_json = _get_customer_json()
