@@ -18,23 +18,25 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 # based on http://flask.pocoo.org/docs/1.0/testing/
 # we don't need a client for database testing, just the db handle
-@pytest.fixture
+@pytest.fixture(scope="function")
 def app():
-    db_fd, db_fname = tempfile.mkstemp()
-    config = {
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname,
+    # Create a temporary database file for testing purposes
+    test_config = {
+        "SQLALCHEMY_DATABASE_URI": 'sqlite:///database_test.db',
         "TESTING": True
     }
 
-    app = create_app(config)
+    app = create_app(test_config)
 
     with app.app_context():
         db.create_all()
 
     yield app
-
-    os.close(db_fd)
-    os.unlink(db_fname)
+    
+    # Teardown after testing
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()  # drop all tables in the database
 
 def _get_customer(number=1):
     return Customer(
