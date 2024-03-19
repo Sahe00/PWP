@@ -13,7 +13,8 @@ class CustomerCollection(Resource):
         try:
             result = []
             for customer in db.session.query(Customer).all():
-                c_info = {"firstName": "", "lastName": "", "email": "", "phone": ""}
+                c_info = {"uuid": "", "firstName": "", "lastName": "", "email": "", "phone": ""}
+                c_info["uuid"] = customer.uuid
                 c_info["firstName"] = customer.firstName
                 c_info["lastName"] = customer.lastName
                 c_info["email"] = customer.email
