@@ -100,7 +100,7 @@ class TestCustomerCollection(object):
 
         for item in body:
             # firstName, lastName, email, phone
-            assert len(item) == 4
+            assert len(item) == 5
             assert "firstName" in item
             assert "lastName" in item
             assert "email" in item
