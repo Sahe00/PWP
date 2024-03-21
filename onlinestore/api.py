@@ -7,9 +7,17 @@ from onlinestore.resources.customer import CustomerCollection, CustomerItem
 from onlinestore.resources.order import OrderCollection, OrderItem
 from onlinestore.resources.productorder import ProductOrderCollection, ProductOrderItem
 from onlinestore.resources.stock import StockCollection, StockItem
+#from onlinestore.masonbuilder import MasonBuilder, InventoryBuilder
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 api = Api(api_bp)
+
+MASON = "application/vnd.mason+json"
+#ERROR_PROFILE = "/profiles/error/"
+LINK_RELATIONS_URL = "/onlinestore/link-relations#"
+
+PRODUCT_PROFILE_URL = "/profiles/product/"
+CUSTOMER_PROFILE_URL = "/profiles/customer/"
 
 # Add resources
 api.add_resource(ProductCollection, '/products/', methods=['GET', 'POST'])
@@ -22,7 +30,8 @@ api.add_resource(OrderCollection, '/orders/', methods=['GET', 'POST'])
 api.add_resource(OrderItem, '/orders/<order:order>/', methods=['GET', 'PUT', 'DELETE'])
 
 api.add_resource(ProductOrderCollection, '/productorders/', methods=['GET', 'POST'])
-api.add_resource(ProductOrderItem, '/productorders/<productorder:productorder>/', methods=['GET', 'PUT', 'DELETE'])
+api.add_resource(ProductOrderItem, '/productorders/<productorder:productorder>/',
+                 methods=['GET', 'PUT', 'DELETE'])
 
 api.add_resource(StockCollection, '/stock/', methods=['GET'])
 api.add_resource(StockItem, '/stock/<stock:product>/', methods=['GET', 'PUT', 'DELETE'])

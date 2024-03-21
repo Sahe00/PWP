@@ -13,6 +13,7 @@ class ProductConverter(BaseConverter):
     def to_url(self, db_product):  # used in reverse routing
         return db_product.name
 
+
 class CustomerConverter(BaseConverter):
     def to_python(self, uuid):  # used in routing
         db_customer = Customer.query.filter_by(uuid=uuid).first()
@@ -22,6 +23,7 @@ class CustomerConverter(BaseConverter):
 
     def to_url(self, db_customer):  # used in reverse routing
         return db_customer.uuid
+
 
 class OrderConverter(BaseConverter):
     def to_python(self, id):  # used in routing
@@ -33,6 +35,7 @@ class OrderConverter(BaseConverter):
     def to_url(self, db_order):  # used in reverse routing
         return db_order.id
 
+
 class ProductOrderConverter(BaseConverter):
     def to_python(self, id):  # used in routing
         db_product_order = ProductOrder.query.filter_by(id=id).first()
@@ -42,6 +45,7 @@ class ProductOrderConverter(BaseConverter):
 
     def to_url(self, db_product_order):  # used in reverse routing
         return db_product_order.id
+
 
 class StockConverter(BaseConverter):
     def to_python(self, productId):  # used in routing
