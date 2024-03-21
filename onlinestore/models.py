@@ -3,6 +3,7 @@ import click
 from flask.cli import with_appcontext
 from onlinestore import db
 
+
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     uuid = db.Column(db.String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
@@ -28,6 +29,20 @@ class Customer(db.Model):
         self.email = data['email']
         self.phone = data.get('phone')
 
+    @staticmethod
+    def json_schema():
+        return {
+            "type": "object",
+            "properties": {
+                "firstName": {"type": "string"},
+                "lastName": {"type": "string"},
+                "email": {"type": "string"},
+                "phone": {"type": "string"}
+            },
+            "required": ["firstName", "lastName", "email"]
+        }
+
+
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
 
@@ -36,7 +51,8 @@ class Order(db.Model):
     createdAt = db.Column(db.String(50), nullable=False)
 
     customer = db.relationship('Customer', back_populates="orders")
-    productOrder = db.relationship('ProductOrder', cascade="all, delete-orphan", back_populates="order")
+    productOrder = db.relationship(
+        'ProductOrder', cascade="all, delete-orphan", back_populates="order")
 
     def serialize(self):
         return {
@@ -48,6 +64,18 @@ class Order(db.Model):
     def deserialize(self, data):
         self.customerId = data['customerId']
         self.createdAt = data['createdAt']
+
+    @staticmethod
+    def json_schema():
+        return {
+            "type": "object",
+            "properties": {
+                "customerId": {"type": "integer"},
+                "createdAt": {"type": "string"}
+            },
+            "required": ["customerId", "createdAt"]
+        }
+
 
 class ProductOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -71,6 +99,20 @@ class ProductOrder(db.Model):
         self.productId = data['productId']
         self.quantity = data['quantity']
 
+    @staticmethod
+    def json_schema():
+        # Quantity must be a positive integer
+        return {
+            "type": "object",
+            "properties": {
+                "orderId": {"type": "integer"},
+                "productId": {"type": "integer"},
+                "quantity": {"type": "integer", "minimum": 0}
+            },
+            "required": ["orderId", "productId", "quantity"]
+        }
+
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String(64), nullable=False)
@@ -92,8 +134,22 @@ class Product(db.Model):
         self.desc = data['desc']
         self.price = data['price']
 
+    @staticmethod
+    def json_schema():
+        return {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "desc": {"type": "string"},
+                "price": {"type": "number"}
+            },
+            "required": ["name", "desc", "price"]
+        }
+
+
 class Stock(db.Model):
-    productId = db.Column(db.Integer, db.ForeignKey('product.id', ondelete="CASCADE"), primary_key=True, nullable=False)
+    productId = db.Column(db.Integer, db.ForeignKey(
+        'product.id', ondelete="CASCADE"), primary_key=True, nullable=False)
     quantity = db.Column(db.Integer)
 
     stockProduct = db.relationship('Product', back_populates="stock")
@@ -107,6 +163,18 @@ class Stock(db.Model):
     def deserialize(self, data):
         self.productId = data.get('productId')
         self.quantity = data.get('quantity')
+
+    @staticmethod
+    def json_schema():
+        # Quantity must be a positive integer
+        return {
+            "type": "object",
+            "properties": {
+                "productId": {"type": "integer"},
+                "quantity": {"type": "integer", "minimum": 0}
+            },
+            "required": ["quantity"]
+        }
 
 
 @click.command("init-db")

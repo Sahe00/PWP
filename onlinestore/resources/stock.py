@@ -1,6 +1,8 @@
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
+from jsonschema import ValidationError, draft7_format_checker, validate
+from werkzeug.exceptions import BadRequest
 from onlinestore import db
 from onlinestore.models import Stock
 
@@ -20,11 +22,19 @@ class StockCollection(Resource):
         except Exception as e:
             return f"Error: {e}", 500
 
+    # TODO: Unnecessary method?
     def post(self):
         try:
             productId = request.json["productId"]
             if productId is None:
                 return "Request content type must be JSON", 415
+
+            # Validate the JSON document against the schema
+            try:
+                validate(request.json, Stock.json_schema(), format_checker=draft7_format_checker)
+            except ValidationError as e:
+                raise BadRequest(description=str(e))  # 400 Bad request
+
             if db.session.query(Stock).filter(Stock.productId == productId).first():
                 return "Product already exists", 409
             try:
@@ -45,19 +55,33 @@ class StockCollection(Resource):
         except (KeyError, ValueError):
             return "Invalid request body", 400
 
+
 class StockItem(Resource):
 
     # Retrieve stock quantity for a specific product
     def get(self, product):
         return product.serialize(), 200
 
-    # Update stock quantity
+    # Update stock quantity for product
     def put(self, product):
         if not request.json:
             return "Unsupported media type", 415
 
         try:
-            product.deserialize(request.json)
+            validate(request.json, Stock.json_schema())
+        except ValidationError as e:
+            raise BadRequest(description=str(e))
+
+        if db.session.query(Stock).filter(Stock.productId == product.productId).first() is None:
+            return f"Product with ID {product.productId} not found", 404
+
+        # Ensure productId cannot be changed
+        if 'productId' in request.json:
+            return "Product ID cannot be modified", 400
+
+        try:
+            # product.deserialize(request.json)
+            product.quantity = request.json["quantity"]
             db.session.add(product)
             try:
                 db.session.commit()
@@ -66,4 +90,4 @@ class StockItem(Resource):
 
             return Response(status=200)
         except IntegrityError:
-            return "Customer not found", 404
+            return "Product not found", 404

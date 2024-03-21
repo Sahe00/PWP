@@ -2,6 +2,8 @@ import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
+from jsonschema import ValidationError, draft7_format_checker, validate
+from werkzeug.exceptions import BadRequest
 from onlinestore import db
 from onlinestore.models import Customer, Order, ProductOrder, Product, Stock
 
@@ -32,6 +34,13 @@ class ProductCollection(Resource):
             name = request.json["name"]
             if name is None:
                 return "Request content type must be JSON", 415
+
+            # Validate the JSON document against the schema
+            try:
+                validate(request.json, Product.json_schema(), format_checker=draft7_format_checker)
+            except ValidationError as e:
+                raise BadRequest(description=str(e))  # 400 Bad request
+
             if db.session.query(Product).filter(Product.name == name).first():
                 return "Product already exists", 409
             try:
@@ -75,6 +84,11 @@ class ProductItem(Resource):
     def put(self, name):
         if not request.json:
             return "Unsupported media type", 415
+
+        try:
+            validate(request.json, Product.json_schema())
+        except ValidationError as e:
+            raise BadRequest(description=str(e))
 
         try:
             name.deserialize(request.json)

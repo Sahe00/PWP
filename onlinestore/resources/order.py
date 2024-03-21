@@ -1,9 +1,11 @@
-import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
+from jsonschema import ValidationError, draft7_format_checker, validate
+from werkzeug.exceptions import BadRequest
 from onlinestore import db
 from onlinestore.models import Customer, Order, ProductOrder, Product, Stock
+
 
 class OrderCollection(Resource):
 
@@ -12,7 +14,7 @@ class OrderCollection(Resource):
         try:
             result = []
             for order in db.session.query(Order).all():
-                o_info = {"customerId":"", "createdAt":""}
+                o_info = {"customerId": "", "createdAt": ""}
                 o_info["customerId"] = order.customerId
                 o_info["createdAt"] = order.createdAt
                 result.append(o_info)
@@ -25,6 +27,15 @@ class OrderCollection(Resource):
             customerId = request.json["customerId"]
             if customerId is None:
                 return "Request content type must be JSON", 415
+
+            # Validate the JSON document against the schema
+            try:
+                validate(request.json, Order.json_schema(), format_checker=draft7_format_checker)
+            except ValidationError as e:
+                raise BadRequest(description=str(e))  # 400 Bad request
+
+            if db.session.query(Customer).filter(Customer.id == customerId).first() is None:
+                return f"Customer with ID {customerId} not found", 404
             try:
                 order = Order()
                 order.deserialize(request.json)
@@ -60,6 +71,11 @@ class OrderItem(Resource):
     def put(self, order):
         if not request.json:
             return "Unsupported media type", 415
+
+        try:
+            validate(request.json, Order.json_schema())
+        except ValidationError as e:
+            raise BadRequest(description=str(e))
 
         try:
             order.deserialize(request.json)
