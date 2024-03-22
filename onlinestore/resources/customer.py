@@ -79,6 +79,15 @@ class CustomerItem(Resource):
         body.add_control_edit_customer(customer)  # PUT
         body.add_control_delete_customer(customer)  # DELETE
         
+        body["orders"] = []
+        
+        # List all orders for the customer
+        for order in customer.orders:
+            item = InventoryBuilder(order.serialize())
+            item.add_control("self", href=url_for("api.orderitem", order=order.id))
+            item.add_control("profile", ORDER_PROFILE)
+            body["orders"].append(item)
+        
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, customer):

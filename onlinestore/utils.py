@@ -138,7 +138,7 @@ class InventoryBuilder(MasonBuilder):
             method="GET",
             title="Get all products",
         )
-        
+
     def add_control_all_customers(self):
         self.add_control(
             "store:customers-all",
@@ -154,7 +154,7 @@ class InventoryBuilder(MasonBuilder):
             method="GET",
             title="Get all orders",
         )
-    
+
     def add_control_all_productorders(self):
         self.add_control(
             "store:productorders-all",
@@ -162,7 +162,7 @@ class InventoryBuilder(MasonBuilder):
             method="GET",
             title="Get all product orders",
         )
-    
+
     def add_control_all_stock(self):
         self.add_control(
             "store:stock-all",
@@ -220,7 +220,7 @@ class InventoryBuilder(MasonBuilder):
             encoding="json",
             schema=Product.json_schema()
         )
-        
+
     def add_control_add_customer(self):
         self.add_control(
             "store:add-customer",
@@ -280,7 +280,39 @@ class InventoryBuilder(MasonBuilder):
             encoding="json",
             schema=Order.json_schema()
         )
-    
+        
+    def add_control_customer_to_order(self, order):
+        self.add_control(
+            "store:get-ordercustomer",
+            url_for("api.customeritem", customer=order.customer.uuid),
+            method="GET",
+            title="Get customer to order",
+        )
+        
+    def add_control_customer_orders(self, customer):
+        self.add_control(
+            "store:get-customerorders",
+            url_for("api.orderitem", order=customer.uuid),
+            method="GET",
+            title="Get customer orders",
+        )
+
+    def add_control_order(self, productorder):
+        self.add_control(
+            "store:get-order",
+            url_for("api.orderitem", order=productorder.order.id),
+            method="GET",
+            title="Get product order details",
+        )
+        
+    def add_control_product(self, productorder):
+        self.add_control(
+            "store:get-product",
+            url_for("api.productitem", name=productorder.product.name),
+            method="GET",
+            title="Get product details",
+        )
+        
     def add_control_edit_productorder(self, productorder):
         self.add_control(
             "edit",
@@ -300,6 +332,7 @@ class InventoryBuilder(MasonBuilder):
             encoding="json",
             schema=Stock.json_schema()
         )
+
 
 class ProductConverter(BaseConverter):
     def to_python(self, product_name):  # used in routing
@@ -338,7 +371,8 @@ class OrderConverter(BaseConverter):
 
 class ProductOrderConverter(BaseConverter):
     def to_python(self, productOrder_id):  # used in routing
-        db_product_order = ProductOrder.query.filter_by(id=productOrder_id).first()
+        db_product_order = ProductOrder.query.filter_by(
+            id=productOrder_id).first()
         if db_product_order is None:
             raise NotFound
         return db_product_order

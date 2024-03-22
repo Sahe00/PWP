@@ -77,6 +77,10 @@ class ProductOrderItem(Resource):
         body.add_control_edit_productorder(productorder)  # PUT
         body.add_control_delete_productorder(productorder)  # DELETE
         
+        # Get order and product details
+        body.add_control_order(productorder)  # GET order details
+        body.add_control_product(productorder)  # GET product details
+        
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, productorder):

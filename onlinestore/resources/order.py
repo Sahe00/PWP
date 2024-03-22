@@ -71,6 +71,7 @@ class OrderItem(Resource):
         body.add_control("self", href=url_for("api.orderitem", order=str(order.id)))
         body.add_control("profile", ORDER_PROFILE)
         body.add_control("collection", href=url_for("api.ordercollection"))
+        body.add_control_customer_to_order(order)  # GET customer to order
         body.add_control_edit_order(order)  # PUT
         body.add_control_delete_order(order)  # DELETE
         
