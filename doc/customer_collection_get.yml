@@ -1,0 +1,18 @@
+---
+description: Get the list of customers
+responses:
+  '200':
+    description: List of customers
+    content:
+      application/json:
+        example:
+        - uuid: b42f07ef-0e88-495e-a84e-dbdfee0483a7
+          firstName: Antti
+          lastName: Heikkinen
+          email: a.heikkinen@hotmail.com
+          phone: "0452230667"
+        - uuid: e6a27c66-8013-411b-bff9-27c481ff5687
+          firstName: Ville
+          lastName: Virtanen
+          email: vilutz22@gmail.com
+          phone: "0401234567"

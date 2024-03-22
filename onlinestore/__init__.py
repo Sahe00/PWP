@@ -1,13 +1,22 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flasgger import Swagger
 from onlinestore.constants import *
+
 
 db = SQLAlchemy()
 
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
+    
+    app.config["SWAGGER"] = {
+        "title": "Online Store API",
+        "openapi": "3.0.3",
+        "uiversion": 3
+    }
+    swagger = Swagger(app)
 
     default_config = {
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,

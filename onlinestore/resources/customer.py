@@ -5,15 +5,18 @@ from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
 
+from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Customer
 from onlinestore.utils import InventoryBuilder
 from onlinestore.constants import *
 
 
-class CustomerCollection(Resource):
 
+
+class CustomerCollection(Resource):
     # Returns a list of customers in the database
+    @swag_from('../../doc/customer_collection_get.yml')
     def get(self):
         body = InventoryBuilder()
 
@@ -32,6 +35,7 @@ class CustomerCollection(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Creates a new customer to the database
+    @swag_from('../../doc/customer_collection_post.yml')
     def post(self):
         try:
             email = request.json["email"]
