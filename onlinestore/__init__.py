@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
+from onlinestore.constants import *
 
 db = SQLAlchemy()
 
@@ -23,16 +23,24 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-    from .utils import ProductConverter, CustomerConverter, OrderConverter, ProductOrderConverter, StockConverter
-    app.url_map.converters['product'] = ProductConverter
-    app.url_map.converters['customer'] = CustomerConverter
-    app.url_map.converters['order'] = OrderConverter
-    app.url_map.converters['productorder'] = ProductOrderConverter
-    app.url_map.converters['stock'] = StockConverter
+    from onlinestore import api, models
+    from onlinestore.utils import ProductConverter, CustomerConverter, OrderConverter, ProductOrderConverter, StockConverter
+    app.url_map.converters["product"] = ProductConverter
+    app.url_map.converters["customer"] = CustomerConverter
+    app.url_map.converters["order"] = OrderConverter
+    app.url_map.converters["productorder"] = ProductOrderConverter
+    app.url_map.converters["stock"] = StockConverter
 
-    from . import api, models
     app.cli.add_command(models.init_db_command)
     app.register_blueprint(api.api_bp, url_prefix='/api')
+
+    @app.route(LINK_RELATIONS_URL)
+    def send_link_relations():
+        return "link relations"
+
+    @app.route("/profiles/<profile>/")
+    def send_profile(profile):
+        return "you requests {} profile".format(profile)
 
     return app
 

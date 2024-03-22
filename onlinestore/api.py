@@ -2,22 +2,14 @@ from flask import Blueprint
 from flask_restful import Api, url_for
 
 # import collections
-from onlinestore.resources.product import ProductCollection, ProductItem
 from onlinestore.resources.customer import CustomerCollection, CustomerItem
 from onlinestore.resources.order import OrderCollection, OrderItem
+from onlinestore.resources.product import ProductCollection, ProductItem
 from onlinestore.resources.productorder import ProductOrderCollection, ProductOrderItem
 from onlinestore.resources.stock import StockCollection, StockItem
-#from onlinestore.masonbuilder import MasonBuilder, InventoryBuilder
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 api = Api(api_bp)
-
-MASON = "application/vnd.mason+json"
-#ERROR_PROFILE = "/profiles/error/"
-LINK_RELATIONS_URL = "/onlinestore/link-relations#"
-
-PRODUCT_PROFILE_URL = "/profiles/product/"
-CUSTOMER_PROFILE_URL = "/profiles/customer/"
 
 # Add resources
 api.add_resource(ProductCollection, '/products/', methods=['GET', 'POST'])
