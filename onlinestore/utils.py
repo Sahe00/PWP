@@ -142,7 +142,6 @@ class InventoryBuilder(MasonBuilder):
     def add_control_delete_product(self, product):
         self.add_control(
             "store:delete",
-            # TODO: Check if this is correct
             url_for("api.productitem", name=product.name),
             method="DELETE",
             title="Delete a product"
@@ -161,7 +160,6 @@ class InventoryBuilder(MasonBuilder):
     def add_control_edit_product(self, product):
         self.add_control(
             "edit",
-            # TODO: Check if this is correct
             url_for("api.productitem", name=product.name),
             method="PUT",
             title="Edit a product",

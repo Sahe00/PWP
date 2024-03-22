@@ -31,18 +31,6 @@ class ProductCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-        # try:
-        #    result = []
-        #    for product in db.session.query(Product).all():
-        #        p_info = {"name": "", "desc": "", "price": 0.0}
-        #        p_info["name"] = product.name
-        #        p_info["desc"] = product.desc
-        #        p_info["price"] = product.price
-        #        result.append(p_info)
-        #    return result, 200
-        # except Exception as e:
-        #    return f"Error: {e}", 500
-
     # Creates a new product to the database
     def post(self):
         try:
@@ -68,10 +56,9 @@ class ProductCollection(Resource):
                 db.session.add(product)
                 db.session.commit()
 
-                product_uri = url_for("api.productcollection", name=product.name)
-
-                # Created
-                return Response(status=201, headers={"Location": product_uri})
+                return Response(status=201, headers={
+                    "Location": url_for("api.productitem", name=product.name)
+                })
             except Exception as e:  # IntegrityError:
                 db.session.rollback()
                 return f"Incomplete request - missing fields - {e}", 500
@@ -83,17 +70,15 @@ class ProductItem(Resource):
 
     # Retrieves information from a specific product
     def get(self, name):
-        return name.serialize()
-
-    # Deletes a product from the database
-    def delete(self, name):
-        try:
-            db.session.delete(name)
-            db.session.commit()
-
-            return Response(status=204)
-        except IntegrityError:
-            return "Product not found", 404
+        body = InventoryBuilder(name.serialize())
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.productitem", name=name.name))
+        body.add_control("profile", PRODUCT_PROFILE)
+        body.add_control("collection", href=url_for("api.productcollection"))
+        body.add_control_edit_product(name)  # PUT
+        body.add_control_delete_product(name)  # DELETE
+        
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Updates product information to the database
     def put(self, name):
@@ -113,6 +98,16 @@ class ProductItem(Resource):
             except IntegrityError:
                 return "Database error", 500
 
-            return Response(status=200)
+            return Response(status=204)
+        except IntegrityError:
+            return "Product not found", 404
+        
+    # Deletes a product from the database
+    def delete(self, name):
+        try:
+            db.session.delete(name)
+            db.session.commit()
+
+            return Response(status=204)
         except IntegrityError:
             return "Product not found", 404
