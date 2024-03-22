@@ -1,26 +1,36 @@
+import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
+
 from onlinestore import db
 from onlinestore.models import Stock
+from onlinestore.utils import InventoryBuilder
+from onlinestore.constants import *
 
 
 class StockCollection(Resource):
-
+    """
+    StockCollection resource represents the collection of all products and their stock quantities.
+    """
     # Retrieve all products and their stock quantities
     def get(self):
-        try:
-            result = []
-            for stock in db.session.query(Stock).all():
-                stock_info = {"productId": 0, "quantity": 0}
-                stock_info["productId"] = stock.productId
-                stock_info["quantity"] = stock.quantity
-                result.append(stock_info)
-            return result, 200
-        except Exception as e:
-            return f"Error: {e}", 500
+        body = InventoryBuilder()
+
+        body.add_namespace("stock", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.stockcollection"))
+        body.add_control_all_stock()  # GET
+        body["items"] = []
+
+        for stock in Stock.query.all():
+            item = InventoryBuilder(stock.serialize())
+            item.add_control("self", href=url_for("api.stockitem", product=stock.productId))
+            item.add_control("profile", STOCK_PROFILE)
+            body["items"].append(item)
+
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     # TODO: Unnecessary method?
     def post(self):
@@ -60,7 +70,15 @@ class StockItem(Resource):
 
     # Retrieve stock quantity for a specific product
     def get(self, product):
-        return product.serialize(), 200
+        body = InventoryBuilder(product.serialize())
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.stockitem", product=product.productId))
+        body.add_control("profile", STOCK_PROFILE)
+        body.add_control("collection", href=url_for("api.stockcollection"))
+        body.add_control_edit_stock(product)  # PUT
+        body.add_control_delete_stock(product)  # DELETE
+        
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Update stock quantity for product
     def put(self, product):

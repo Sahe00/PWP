@@ -4,23 +4,31 @@ from flask import Response, request, url_for
 from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
+
 from onlinestore import db
-from onlinestore.models import Customer, Order, ProductOrder, Product, Stock
+from onlinestore.models import ProductOrder, Order, Product
+from onlinestore.utils import InventoryBuilder
+from onlinestore.constants import *
 
 
 class ProductOrderCollection(Resource):
     def get(self):
-        try:
-            result = []
-            for productOrder in db.session.query(ProductOrder).all():
-                po_info = {"orderId": 0, "productId": 0, "quantity": 0}
-                po_info["orderId"] = productOrder.orderId
-                po_info["productId"] = productOrder.productId
-                po_info["quantity"] = productOrder.quantity
-                result.append(po_info)
-            return result, 200
-        except Exception as e:
-            return f"Error: {e}", 500
+        body = InventoryBuilder()
+
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.productordercollection"))
+        body.add_control_all_productorders()  # GET
+        body.add_control_add_productorder()  # POST
+        body["items"] = []
+
+        for productorder in ProductOrder.query.all():
+            item = InventoryBuilder(productorder.serialize())
+            item.add_control("self", href=url_for("api.productorderitem", productorder=productorder.id))
+            item.add_control("profile", PRODUCTORDER_PROFILE)
+            body["items"].append(item)
+
+        return Response(json.dumps(body), 200, mimetype=MASON)
+
 
     def post(self):
         try:
@@ -61,7 +69,15 @@ class ProductOrderCollection(Resource):
 
 class ProductOrderItem(Resource):
     def get(self, productorder):
-        return productorder.serialize(), 200
+        body = InventoryBuilder(productorder.serialize())
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.productorderitem", productorder=productorder.id))
+        body.add_control("profile", PRODUCTORDER_PROFILE)
+        body.add_control("collection", href=url_for("api.productordercollection"))
+        body.add_control_edit_productorder(productorder)  # PUT
+        body.add_control_delete_productorder(productorder)  # DELETE
+        
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, productorder):
         try:

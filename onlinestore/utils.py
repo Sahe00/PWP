@@ -138,6 +138,38 @@ class InventoryBuilder(MasonBuilder):
             method="GET",
             title="Get all products",
         )
+        
+    def add_control_all_customers(self):
+        self.add_control(
+            "store:customers-all",
+            url_for("api.customercollection"),
+            method="GET",
+            title="Get all customers",
+        )
+
+    def add_control_all_orders(self):
+        self.add_control(
+            "store:orders-all",
+            url_for("api.ordercollection"),
+            method="GET",
+            title="Get all orders",
+        )
+    
+    def add_control_all_productorders(self):
+        self.add_control(
+            "store:productorders-all",
+            url_for("api.productordercollection"),
+            method="GET",
+            title="Get all product orders",
+        )
+    
+    def add_control_all_stock(self):
+        self.add_control(
+            "store:stock-all",
+            url_for("api.stockcollection"),
+            method="GET",
+            title="Get all stock",
+        )
 
     def add_control_delete_product(self, product):
         self.add_control(
@@ -145,6 +177,38 @@ class InventoryBuilder(MasonBuilder):
             url_for("api.productitem", name=product.name),
             method="DELETE",
             title="Delete a product"
+        )
+
+    def add_control_delete_customer(self, customer):
+        self.add_control(
+            "store:delete",
+            url_for("api.customeritem", customer=customer.uuid),
+            method="DELETE",
+            title="Delete a customer"
+        )
+
+    def add_control_delete_order(self, order):
+        self.add_control(
+            "store:delete",
+            url_for("api.orderitem", order=order.id),
+            method="DELETE",
+            title="Delete an order"
+        )
+
+    def add_control_delete_productorder(self, productorder):
+        self.add_control(
+            "store:delete",
+            url_for("api.productorderitem", productorder=productorder.id),
+            method="DELETE",
+            title="Delete a product order"
+        )
+
+    def add_control_delete_stock(self, product):
+        self.add_control(
+            "store:delete",
+            url_for("api.stockitem", product=product.productId),
+            method="DELETE",
+            title="Delete stock"
         )
 
     def add_control_add_product(self):
@@ -155,6 +219,36 @@ class InventoryBuilder(MasonBuilder):
             title="Add a new product",
             encoding="json",
             schema=Product.json_schema()
+        )
+        
+    def add_control_add_customer(self):
+        self.add_control(
+            "store:add-customer",
+            url_for("api.customercollection"),
+            method="POST",
+            title="Add a new customer",
+            encoding="json",
+            schema=Customer.json_schema()
+        )
+
+    def add_control_add_order(self):
+        self.add_control(
+            "store:add-order",
+            url_for("api.ordercollection"),
+            method="POST",
+            title="Add a new order",
+            encoding="json",
+            schema=Order.json_schema()
+        )
+
+    def add_control_add_productorder(self):
+        self.add_control(
+            "store:add-productorder",
+            url_for("api.productordercollection"),
+            method="POST",
+            title="Add a new product order",
+            encoding="json",
+            schema=ProductOrder.json_schema()
         )
 
     def add_control_edit_product(self, product):
@@ -167,6 +261,45 @@ class InventoryBuilder(MasonBuilder):
             schema=Product.json_schema()
         )
 
+    def add_control_edit_customer(self, customer):
+        self.add_control(
+            "edit",
+            url_for("api.customeritem", customer=customer.uuid),
+            method="PUT",
+            title="Edit a customer",
+            encoding="json",
+            schema=Customer.json_schema()
+        )
+
+    def add_control_edit_order(self, order):
+        self.add_control(
+            "edit",
+            url_for("api.orderitem", order=order.id),
+            method="PUT",
+            title="Edit a order",
+            encoding="json",
+            schema=Order.json_schema()
+        )
+    
+    def add_control_edit_productorder(self, productorder):
+        self.add_control(
+            "edit",
+            url_for("api.productorderitem", productorder=productorder.id),
+            method="PUT",
+            title="Edit a product order",
+            encoding="json",
+            schema=ProductOrder.json_schema()
+        )
+
+    def add_control_edit_stock(self, product):
+        self.add_control(
+            "edit",
+            url_for("api.stockitem", product=product.productId),
+            method="PUT",
+            title="Edit a stock",
+            encoding="json",
+            schema=Stock.json_schema()
+        )
 
 class ProductConverter(BaseConverter):
     def to_python(self, product_name):  # used in routing
@@ -178,7 +311,7 @@ class ProductConverter(BaseConverter):
     def to_url(self, db_product):  # used in reverse routing
         # db_product.name
         # AttributeError: 'str' object has no attribute 'name'
-        return db_product
+        return str(db_product)
 
 
 class CustomerConverter(BaseConverter):
@@ -189,7 +322,7 @@ class CustomerConverter(BaseConverter):
         return db_customer
 
     def to_url(self, db_customer):  # used in reverse routing
-        return db_customer.uuid
+        return str(db_customer)
 
 
 class OrderConverter(BaseConverter):
@@ -200,7 +333,7 @@ class OrderConverter(BaseConverter):
         return db_order
 
     def to_url(self, db_order):  # used in reverse routing
-        return db_order.id
+        return str(db_order)
 
 
 class ProductOrderConverter(BaseConverter):
@@ -211,7 +344,7 @@ class ProductOrderConverter(BaseConverter):
         return db_product_order
 
     def to_url(self, db_product_order):  # used in reverse routing
-        return db_product_order.id
+        return str(db_product_order)
 
 
 class StockConverter(BaseConverter):
@@ -222,4 +355,4 @@ class StockConverter(BaseConverter):
         return db_stock
 
     def to_url(self, db_stock):  # used in reverse routing
-        return db_stock.productId
+        return str(db_stock)

@@ -1,26 +1,35 @@
+import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
+
 from onlinestore import db
-from onlinestore.models import Customer, Order, ProductOrder, Product, Stock
+from onlinestore.models import Order, Customer
+from onlinestore.utils import InventoryBuilder
+from onlinestore.constants import *
 
 
 class OrderCollection(Resource):
 
     # Returns a list of orders in the database
     def get(self):
-        try:
-            result = []
-            for order in db.session.query(Order).all():
-                o_info = {"customerId": "", "createdAt": ""}
-                o_info["customerId"] = order.customerId
-                o_info["createdAt"] = order.createdAt
-                result.append(o_info)
-            return result, 200
-        except Exception as e:
-            return f"Error: {e}", 500
+        body = InventoryBuilder()
+
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.ordercollection"))
+        body.add_control_all_orders()  # GET
+        body.add_control_add_order()  # POST
+        body["items"] = []
+
+        for order in Order.query.all():
+            item = InventoryBuilder(order.serialize())
+            item.add_control("self", href=url_for("api.orderitem", order=str(order.id)))
+            item.add_control("profile", ORDER_PROFILE)
+            body["items"].append(item)
+
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def post(self):
         try:
@@ -45,7 +54,7 @@ class OrderCollection(Resource):
                 db.session.add(order)
                 db.session.commit()
 
-                order_uri = url_for("api.ordercollection", id=order.id)
+                order_uri = url_for("api.orderitem", id=order.id)
 
                 return Response(status=201, headers={"Location": order_uri})
             except Exception as e:  # IntegrityError:
@@ -57,7 +66,15 @@ class OrderCollection(Resource):
 
 class OrderItem(Resource):
     def get(self, order):
-        return order.serialize(), 200
+        body = InventoryBuilder(order.serialize())
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.orderitem", order=str(order.id)))
+        body.add_control("profile", ORDER_PROFILE)
+        body.add_control("collection", href=url_for("api.ordercollection"))
+        body.add_control_edit_order(order)  # PUT
+        body.add_control_delete_order(order)  # DELETE
+        
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, order):
         try:
@@ -85,6 +102,6 @@ class OrderItem(Resource):
             except IntegrityError:
                 return "Database error", 500
 
-            return Response(status=200)
+            return Response(status=204)
         except IntegrityError:
             return "Customer not found", 404

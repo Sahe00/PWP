@@ -4,27 +4,32 @@ from flask import Response, request, url_for
 from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
+
 from onlinestore import db
-from onlinestore.models import Customer, Order, ProductOrder, Product, Stock
+from onlinestore.models import Customer
+from onlinestore.utils import InventoryBuilder
+from onlinestore.constants import *
 
 
 class CustomerCollection(Resource):
 
     # Returns a list of customers in the database
     def get(self):
-        try:
-            result = []
-            for customer in db.session.query(Customer).all():
-                c_info = {"uuid": "", "firstName": "", "lastName": "", "email": "", "phone": ""}
-                c_info["uuid"] = customer.uuid
-                c_info["firstName"] = customer.firstName
-                c_info["lastName"] = customer.lastName
-                c_info["email"] = customer.email
-                c_info["phone"] = customer.phone
-                result.append(c_info)
-            return result, 200
-        except Exception as e:
-            return f"Error: {e}", 500
+        body = InventoryBuilder()
+
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.customercollection"))
+        body.add_control_all_customers()  # GET
+        body.add_control_add_customer()  # POST
+        body["items"] = []
+
+        for customer in Customer.query.all():
+            item = InventoryBuilder(customer.serialize())
+            item.add_control("self", href=url_for("api.customeritem", customer=customer.uuid))
+            item.add_control("profile", CUSTOMER_PROFILE)
+            body["items"].append(item)
+
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Creates a new customer to the database
     def post(self):
@@ -49,10 +54,10 @@ class CustomerCollection(Resource):
             try:
                 db.session.add(customer)
                 db.session.commit()
-
-                customer_uri = url_for("api.customercollection", uuid=customer.uuid)
-
-                return Response(status=201, headers={"Location": customer_uri})
+            
+                return Response(status=201, headers={
+                    "Location": url_for("api.customeritem", customer=customer.uuid)
+                })
             except Exception as e:  # IntegrityError:
                 db.session.rollback()
                 return f"Incomplete request - missing fields - {e}", 500
@@ -62,7 +67,15 @@ class CustomerCollection(Resource):
 
 class CustomerItem(Resource):
     def get(self, customer):
-        return customer.serialize()
+        body = InventoryBuilder(customer.serialize())
+        body.add_namespace("store", LINK_RELATIONS_URL)
+        body.add_control("self", href=url_for("api.customeritem", customer=customer.uuid))
+        body.add_control("profile", CUSTOMER_PROFILE)
+        body.add_control("collection", href=url_for("api.customercollection"))
+        body.add_control_edit_customer(customer)  # PUT
+        body.add_control_delete_customer(customer)  # DELETE
+        
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, customer):
         try:
@@ -90,6 +103,6 @@ class CustomerItem(Resource):
             except IntegrityError:
                 return "Database error", 500
 
-            return Response(status=200)
+            return Response(status=204)
         except IntegrityError:
             return "Customer not found", 404

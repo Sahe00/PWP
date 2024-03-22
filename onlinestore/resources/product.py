@@ -52,7 +52,6 @@ class ProductCollection(Resource):
             except ValueError:
                 return "Invalid request body", 400
             try:
-                # product = Product(name=name, desc=desc, price=price)
                 db.session.add(product)
                 db.session.commit()
 
