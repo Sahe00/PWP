@@ -107,6 +107,12 @@ class CustomerItem(Resource):
             raise BadRequest(description=str(e))
 
         try:
+            # Check if customer email already exists
+            email = request.json["email"]
+            email_exists = db.session.query(Customer).filter(Customer.email == email).first()
+            if customer.email != email and email_exists:
+                return "Customer with this email already exists", 409
+
             customer.deserialize(request.json)
             db.session.add(customer)
             try:
