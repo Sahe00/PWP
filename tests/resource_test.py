@@ -101,7 +101,7 @@ def _check_control_delete_method(ctrl, client, obj):
     assert resp.status_code == 204
 
 
-def _check_control_put_method(ctrl, client, obj):
+def _check_control_put_method(ctrl, client, obj, json_obj):
     """
     Checks a PUT type control from a JSON object be it root document or an item
     in a collection. In addition to checking the "href" attribute, also checks
@@ -118,14 +118,13 @@ def _check_control_put_method(ctrl, client, obj):
     schema = ctrl_obj["schema"]
     assert method == "put"
     assert encoding == "json"
-    body = _get_customer_json()
-    body["name"] = obj["name"]
-    validate(body, schema)
-    resp = client.put(href, json=body)
+    json_obj["uuid"] = obj["uuid"]
+    validate(json_obj, schema)
+    resp = client.put(href, json=json_obj)
     assert resp.status_code == 204
 
 
-def _check_control_post_method(ctrl, client, obj):
+def _check_control_post_method(ctrl, client, obj, json_obj):
     """
     Checks a POST type control from a JSON object be it root document or an item
     in a collection. In addition to checking the "href" attribute, also checks
@@ -142,9 +141,8 @@ def _check_control_post_method(ctrl, client, obj):
     schema = ctrl_obj["schema"]
     assert method == "post"
     assert encoding == "json"
-    body = _get_customer_json()
-    validate(body, schema)
-    resp = client.post(href, json=body)
+    validate(json_obj, schema)
+    resp = client.post(href, json=json_obj)
     assert resp.status_code == 201
 
 
@@ -181,14 +179,13 @@ class TestCustomerCollection(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-
-        for item in body:
-            # firstName, lastName, email, phone
-            assert len(item) == 5
-            assert "firstName" in item
-            assert "lastName" in item
-            assert "email" in item
-            assert "phone" in item
+        _check_namespace(client, body)
+        valid_json = _get_customer_json()
+        _check_control_post_method("customer:add-customer", client, body, valid_json)
+        assert len(body["customers"]) == 3
+        for item in body["customers"]:
+            _check_control_get_method("self", client, item)
+            _check_control_get_method("profile", client, item)
 
     def test_post(self, client):
         valid_json = _get_customer_json()
@@ -201,8 +198,12 @@ class TestCustomerCollection(object):
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 201
-        # assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
 
+        # Get customer uuid from the response header
+        customer_uuid = resp.headers["Location"].split("/")[-2]
+
+        # /api/customers/a3c7fea2-6a55-47b0-9f81-69d77798a61a/
+        assert resp.headers["Location"].endswith(self.RESOURCE_URL + customer_uuid + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
 
@@ -210,10 +211,86 @@ class TestCustomerCollection(object):
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 409
 
-        # remove email field and try to post again, error 400 expected
+        # remove required "email" field and try to post again, error 400 expected
         valid_json.pop("email")
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 400  # Invalid request body
+
+
+class TestCustomerItem(object):
+
+    ALL_CUSTOMERS_URL = "/api/customers/"
+    INVALID_URL = "/api/customers/non-customer-x/"
+
+    def test_get(self, client):
+        resp = client.get(self.ALL_CUSTOMERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first customer from the list
+        CUSTOMER_URL = body["customers"][0]["@controls"]["self"]["href"]
+        resp = client.get(CUSTOMER_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        _check_control_get_method("self", client, body)
+        _check_control_get_method("profile", client, body)
+        _check_control_get_method("collection", client, body)
+        valid_json = _get_customer_json()
+        _check_control_put_method("edit", client, body, valid_json)
+        _check_control_delete_method("delete", client, body)
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
+
+    def test_put(self, client):
+        valid_json = _get_customer_json()
+
+        resp = client.get(self.ALL_CUSTOMERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first customer from the list
+        CUSTOMER_URL = body["customers"][0]["@controls"]["self"]["href"]
+
+        # test with wrong content type
+        resp = client.put(CUSTOMER_URL, data="notjson", headers=Headers({"Content-Type": "text"}))
+        assert resp.status_code in (400, 415)
+
+        resp = client.put(self.INVALID_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+
+        valid_customer_email = body["customers"][0].get("email")
+        another_customer_email = body["customers"][1].get("email")
+
+        # test with another customer's email
+        valid_json["email"] = another_customer_email
+        resp = client.put(CUSTOMER_URL, json=valid_json)
+        assert resp.status_code == 409  # Conflict
+
+        # test with valid email
+        valid_json["email"] = valid_customer_email
+        resp = client.put(CUSTOMER_URL, json=valid_json)
+        assert resp.status_code == 204
+
+        # remove email field for 400
+        valid_json.pop("email")
+        resp = client.put(CUSTOMER_URL, json=valid_json)
+        assert resp.status_code == 400
+
+    def test_delete(self, client):
+        resp = client.get(self.ALL_CUSTOMERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        
+        # Get url of first customer from the list
+        CUSTOMER_URL = body["customers"][0]["@controls"]["self"]["href"]
+        
+        resp = client.delete(CUSTOMER_URL)
+        assert resp.status_code == 204
+        resp = client.delete(CUSTOMER_URL)
+        assert resp.status_code == 404
+        resp = client.delete(self.INVALID_URL)
+        assert resp.status_code == 404
 
 
 class TestProductCollection(object):
@@ -224,13 +301,13 @@ class TestProductCollection(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-
-        for item in body:
-            # name, desc, price
-            assert len(item) == 3
-            assert "name" in item
-            assert "desc" in item
-            assert "price" in item
+        _check_namespace(client, body)
+        valid_json = _get_product_json()
+        _check_control_post_method("product:add-product", client, body, valid_json)
+        assert len(body["products"]) == 2
+        for item in body["products"]:
+            _check_control_get_method("self", client, item)
+            _check_control_get_method("profile", client, item)
 
     def test_post(self, client):
         valid_json = _get_product_json()
@@ -243,8 +320,9 @@ class TestProductCollection(object):
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 201
-        # assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
 
+        # /api/products/Sateenvarjo-2/
+        assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
 
