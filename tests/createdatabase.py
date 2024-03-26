@@ -37,7 +37,21 @@ def _populate_db():
         firstName="Antti",
         lastName="Heikkinen",
         email="a.heikkinen@luukku.com",
-        phone="04012345667"
+        phone="0441234569"
+    )
+    
+    pekka = Customer(
+        firstName="Pekka",
+        lastName="Pakkala",
+        email="pekka.pakkala@gmail.com",
+        phone="0441254561"
+    )
+    
+    jukka = Customer(
+        firstName="Jukka",
+        lastName="Junnila",
+        email="jukka.junnila@hotmail.com",
+        phone="0501234567"
     )
 
     satikka = Product(
@@ -82,6 +96,8 @@ def _populate_db():
     db.session.add_all(
         [
             antti,
+            pekka,
+            jukka,
             satikka,
             kumpparit,
             antin_tilaus,
