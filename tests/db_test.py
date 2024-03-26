@@ -116,7 +116,7 @@ def test_create_instances(app):
         # Check all relationships (both sides)
         #assert db_customer.orders == db_order
         #assert db_order.customer == db_customer
-        #assert db_order.productOrder == db_product_order
+        #assert db_order.productOrders == db_product_order
         #assert db_product_order.order == db_order
         #assert db_product_order.product == db_product
         #assert db_product.products == db_product_order

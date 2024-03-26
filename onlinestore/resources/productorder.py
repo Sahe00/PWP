@@ -19,13 +19,14 @@ class ProductOrderCollection(Resource):
         body.add_control("self", href=url_for("api.productordercollection"))
         body.add_control_all_productorders()  # GET
         body.add_control_add_productorder()  # POST
-        body["items"] = []
+        body["productorders"] = []
 
+        # List all product orders in the database
         for productorder in ProductOrder.query.all():
             item = InventoryBuilder(productorder.serialize())
             item.add_control("self", href=url_for("api.productorderitem", productorder=productorder.id))
             item.add_control("profile", PRODUCTORDER_PROFILE)
-            body["items"].append(item)
+            body["productorders"].append(item)
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
@@ -77,7 +78,7 @@ class ProductOrderItem(Resource):
         body.add_control_edit_productorder(productorder)  # PUT
         body.add_control_delete_productorder(productorder)  # DELETE
         
-        # Get order and product details
+        # Get order and product details for the product order
         body.add_control_order(productorder)  # GET order details
         body.add_control_product(productorder)  # GET product details
         

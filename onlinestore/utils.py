@@ -102,6 +102,7 @@ class MasonBuilder(dict):
         : param dict schema: a dictionary representing a valid JSON schema
         """
 
+        # TODO: Change name prefix to store:edit?
         self.add_control(
             "edit",
             href,
@@ -122,8 +123,9 @@ class MasonBuilder(dict):
         : param str title: human-readable title for the control
         """
 
+        # TODO: Change name prefix to store:delete?
         self.add_control(
-            "storage:delete",
+            "delete",
             href,
             method="DELETE",
             title=title,
@@ -133,7 +135,7 @@ class MasonBuilder(dict):
 class InventoryBuilder(MasonBuilder):
     def add_control_all_products(self):
         self.add_control(
-            "store:products-all",
+            "product:get-products",
             url_for("api.productcollection"),
             method="GET",
             title="Get all products",
@@ -141,7 +143,7 @@ class InventoryBuilder(MasonBuilder):
 
     def add_control_all_customers(self):
         self.add_control(
-            "store:customers-all",
+            "customer:get-customers",
             url_for("api.customercollection"),
             method="GET",
             title="Get all customers",
@@ -149,7 +151,7 @@ class InventoryBuilder(MasonBuilder):
 
     def add_control_all_orders(self):
         self.add_control(
-            "store:orders-all",
+            "order:get-orders",
             url_for("api.ordercollection"),
             method="GET",
             title="Get all orders",
@@ -157,7 +159,7 @@ class InventoryBuilder(MasonBuilder):
 
     def add_control_all_productorders(self):
         self.add_control(
-            "store:productorders-all",
+            "productorder:get-productorders",
             url_for("api.productordercollection"),
             method="GET",
             title="Get all product orders",
@@ -165,173 +167,154 @@ class InventoryBuilder(MasonBuilder):
 
     def add_control_all_stock(self):
         self.add_control(
-            "store:stock-all",
+            "stock:get-stocks",
             url_for("api.stockcollection"),
             method="GET",
-            title="Get all stock",
+            title="Get all stocks",
         )
 
-    def add_control_delete_product(self, product):
-        self.add_control(
-            "store:delete",
-            url_for("api.productitem", name=product.name),
-            method="DELETE",
-            title="Delete a product"
-        )
-
-    def add_control_delete_customer(self, customer):
-        self.add_control(
-            "store:delete",
-            url_for("api.customeritem", customer=customer.uuid),
-            method="DELETE",
-            title="Delete a customer"
-        )
-
-    def add_control_delete_order(self, order):
-        self.add_control(
-            "store:delete",
-            url_for("api.orderitem", order=order.id),
-            method="DELETE",
-            title="Delete an order"
-        )
-
-    def add_control_delete_productorder(self, productorder):
-        self.add_control(
-            "store:delete",
-            url_for("api.productorderitem", productorder=productorder.id),
-            method="DELETE",
-            title="Delete a product order"
-        )
-
-    def add_control_delete_stock(self, product):
-        self.add_control(
-            "store:delete",
-            url_for("api.stockitem", product=product.productId),
-            method="DELETE",
-            title="Delete stock"
-        )
-
-    def add_control_add_product(self):
-        self.add_control(
-            "store:add-product",
-            url_for("api.productcollection"),
-            method="POST",
-            title="Add a new product",
-            encoding="json",
-            schema=Product.json_schema()
-        )
-
-    def add_control_add_customer(self):
-        self.add_control(
-            "store:add-customer",
-            url_for("api.customercollection"),
-            method="POST",
-            title="Add a new customer",
-            encoding="json",
-            schema=Customer.json_schema()
-        )
-
-    def add_control_add_order(self):
-        self.add_control(
-            "store:add-order",
-            url_for("api.ordercollection"),
-            method="POST",
-            title="Add a new order",
-            encoding="json",
-            schema=Order.json_schema()
-        )
-
-    def add_control_add_productorder(self):
-        self.add_control(
-            "store:add-productorder",
-            url_for("api.productordercollection"),
-            method="POST",
-            title="Add a new product order",
-            encoding="json",
-            schema=ProductOrder.json_schema()
-        )
-
-    def add_control_edit_product(self, product):
-        self.add_control(
-            "edit",
-            url_for("api.productitem", name=product.name),
-            method="PUT",
-            title="Edit a product",
-            encoding="json",
-            schema=Product.json_schema()
-        )
-
-    def add_control_edit_customer(self, customer):
-        self.add_control(
-            "edit",
-            url_for("api.customeritem", customer=customer.uuid),
-            method="PUT",
-            title="Edit a customer",
-            encoding="json",
-            schema=Customer.json_schema()
-        )
-
-    def add_control_edit_order(self, order):
-        self.add_control(
-            "edit",
-            url_for("api.orderitem", order=order.id),
-            method="PUT",
-            title="Edit a order",
-            encoding="json",
-            schema=Order.json_schema()
-        )
-        
     def add_control_customer_to_order(self, order):
         self.add_control(
-            "store:get-ordercustomer",
+            "order:by-customer",
             url_for("api.customeritem", customer=order.customer.uuid),
             method="GET",
             title="Get customer to order",
         )
-        
+
     def add_control_customer_orders(self, customer):
         self.add_control(
-            "store:get-customerorders",
+            "customer:customer-orders",
             url_for("api.orderitem", order=customer.uuid),
             method="GET",
             title="Get customer orders",
         )
 
+    def add_control_get_productorder(self, product):
+        self.add_control(
+            "product:get-productorder",
+            url_for("api.productorderitem", productorder=product.id),
+            method="GET",
+            title="Get product order for the product",
+        )
+
+    def add_control_get_stock(self, product):
+        self.add_control(
+            "product:stock-by-product",
+            url_for("api.stockitem", product=product.id),
+            method="GET",
+            title="Get stock for the product",
+        )
+
+    def add_control_get_product(self, product):
+        self.add_control(
+            "stock:get-product",
+            url_for("api.productitem", name=product.stockProduct.name),
+            method="GET",
+            title="Get product for the stock",
+        )
+
     def add_control_order(self, productorder):
         self.add_control(
-            "store:get-order",
+            "productorder:get-order",
             url_for("api.orderitem", order=productorder.order.id),
             method="GET",
-            title="Get product order details",
+            title="Get order for the productorder",
         )
-        
+
     def add_control_product(self, productorder):
         self.add_control(
-            "store:get-product",
+            "productorder:get-product",
             url_for("api.productitem", name=productorder.product.name),
             method="GET",
-            title="Get product details",
+            title="Get product for the productorder",
         )
-        
+
+    def add_control_add_product(self):
+        self.add_control_post(
+            "product:add-product",
+            "Add a new product",
+            url_for("api.productcollection"),
+            Product.json_schema()
+        )
+
+    def add_control_add_customer(self):
+        self.add_control_post(
+            "customer:add-customer",
+            "Add a new customer",
+            url_for("api.customercollection"),
+            Customer.json_schema()
+        )
+
+    def add_control_add_order(self):
+        self.add_control_post(
+            "order:add-order",
+            "Add a new order",
+            url_for("api.ordercollection"),
+            Order.json_schema()
+        )
+
+    def add_control_add_productorder(self):
+        self.add_control_post(
+            "productorder:add-productorder",
+            "Add a new product order",
+            url_for("api.productordercollection"),
+            ProductOrder.json_schema()
+        )
+
+    def add_control_edit_customer(self, customer):
+        self.add_control_put(
+            "Edit a customer",
+            url_for("api.customeritem", customer=customer.uuid),
+            Customer.json_schema()
+        )
+
+    def add_control_edit_product(self, product):
+        self.add_control_put(
+            "Edit a product",
+            url_for("api.productitem", name=product.name),
+            Product.json_schema()
+        )
+
+    def add_control_edit_order(self, order):
+        self.add_control_put(
+            "Edit an order",
+            url_for("api.orderitem", order=order.id),
+            Order.json_schema()
+        )
+
     def add_control_edit_productorder(self, productorder):
-        self.add_control(
-            "edit",
+        self.add_control_put(
+            "Edit a product order",
             url_for("api.productorderitem", productorder=productorder.id),
-            method="PUT",
-            title="Edit a product order",
-            encoding="json",
-            schema=ProductOrder.json_schema()
+            ProductOrder.json_schema()
         )
 
     def add_control_edit_stock(self, product):
-        self.add_control(
-            "edit",
+        self.add_control_put(
+            "Edit stock",
             url_for("api.stockitem", product=product.productId),
-            method="PUT",
-            title="Edit a stock",
-            encoding="json",
-            schema=Stock.json_schema()
+            Stock.json_schema()
         )
+
+    def add_control_delete_product(self, product):
+        href = url_for("api.productitem", name=product.name)
+        self.add_control_delete("Delete a product", href=href)
+
+    def add_control_delete_customer(self, customer):
+        href = url_for("api.customeritem", customer=customer.uuid)
+        self.add_control_delete("Delete a customer", href=href)
+
+    def add_control_delete_order(self, order):
+        href = url_for("api.orderitem", order=order.id)
+        self.add_control_delete("Delete an order", href=href)
+
+    def add_control_delete_productorder(self, productorder):
+        href = url_for("api.productorderitem", productorder=productorder.id)
+        self.add_control_delete("Delete a product order", href=href)
+
+    def add_control_delete_stock(self, product):
+        href = url_for("api.stockitem", product=product.productId)
+        self.add_control_delete("Delete product stock", href=href)
 
 
 class ProductConverter(BaseConverter):

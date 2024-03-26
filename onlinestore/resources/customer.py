@@ -12,8 +12,6 @@ from onlinestore.utils import InventoryBuilder
 from onlinestore.constants import *
 
 
-
-
 class CustomerCollection(Resource):
     # Returns a list of customers in the database
     @swag_from('../../doc/customer_collection_get.yml')
@@ -24,13 +22,14 @@ class CustomerCollection(Resource):
         body.add_control("self", href=url_for("api.customercollection"))
         body.add_control_all_customers()  # GET
         body.add_control_add_customer()  # POST
-        body["items"] = []
+        body["customers"] = []
 
+        # List all customers in the database
         for customer in Customer.query.all():
             item = InventoryBuilder(customer.serialize())
             item.add_control("self", href=url_for("api.customeritem", customer=customer.uuid))
             item.add_control("profile", CUSTOMER_PROFILE)
-            body["items"].append(item)
+            body["customers"].append(item)
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
@@ -58,7 +57,7 @@ class CustomerCollection(Resource):
             try:
                 db.session.add(customer)
                 db.session.commit()
-            
+
                 return Response(status=201, headers={
                     "Location": url_for("api.customeritem", customer=customer.uuid)
                 })
@@ -78,16 +77,15 @@ class CustomerItem(Resource):
         body.add_control("collection", href=url_for("api.customercollection"))
         body.add_control_edit_customer(customer)  # PUT
         body.add_control_delete_customer(customer)  # DELETE
-        
         body["orders"] = []
-        
+
         # List all orders for the customer
         for order in customer.orders:
             item = InventoryBuilder(order.serialize())
             item.add_control("self", href=url_for("api.orderitem", order=order.id))
             item.add_control("profile", ORDER_PROFILE)
             body["orders"].append(item)
-        
+
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, customer):

@@ -21,13 +21,15 @@ class ProductCollection(Resource):
         body.add_control("self", href=url_for("api.productcollection"))
         body.add_control_all_products()  # GET
         body.add_control_add_product()  # POST
-        body["items"] = []
 
+        body["products"] = []
+
+        # List all products in the database
         for product in Product.query.all():
             item = InventoryBuilder(product.serialize())
             item.add_control("self", href=url_for("api.productitem", name=product.name))
             item.add_control("profile", PRODUCT_PROFILE)
-            body["items"].append(item)
+            body["products"].append(item)
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
@@ -74,9 +76,11 @@ class ProductItem(Resource):
         body.add_control("self", href=url_for("api.productitem", name=name.name))
         body.add_control("profile", PRODUCT_PROFILE)
         body.add_control("collection", href=url_for("api.productcollection"))
+        body.add_control_get_productorder(name)  # GET product order for the product
+        body.add_control_get_stock(name)  # GET stock for the product
         body.add_control_edit_product(name)  # PUT
         body.add_control_delete_product(name)  # DELETE
-        
+
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Updates product information to the database
@@ -100,7 +104,7 @@ class ProductItem(Resource):
             return Response(status=204)
         except IntegrityError:
             return "Product not found", 404
-        
+
     # Deletes a product from the database
     def delete(self, name):
         try:

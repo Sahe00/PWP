@@ -16,6 +16,7 @@ class StockCollection(Resource):
     StockCollection resource represents the collection of all products and their stock quantities.
     """
     # Retrieve all products and their stock quantities
+
     def get(self):
         body = InventoryBuilder()
 
@@ -75,9 +76,10 @@ class StockItem(Resource):
         body.add_control("self", href=url_for("api.stockitem", product=product.productId))
         body.add_control("profile", STOCK_PROFILE)
         body.add_control("collection", href=url_for("api.stockcollection"))
+        body.add_control_get_product(product)  # GET product for the stock
         body.add_control_edit_stock(product)  # PUT
         body.add_control_delete_stock(product)  # DELETE
-        
+
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Update stock quantity for product
@@ -107,5 +109,15 @@ class StockItem(Resource):
                 return "Database error", 500
 
             return Response(status=200)
+        except IntegrityError:
+            return "Product not found", 404
+
+    # Delete stock quantity for product
+    def delete(self, product):
+        try:
+            db.session.delete(product)
+            db.session.commit()
+
+            return Response(status=204)
         except IntegrityError:
             return "Product not found", 404

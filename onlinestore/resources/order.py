@@ -21,13 +21,14 @@ class OrderCollection(Resource):
         body.add_control("self", href=url_for("api.ordercollection"))
         body.add_control_all_orders()  # GET
         body.add_control_add_order()  # POST
-        body["items"] = []
+        body["orders"] = []
 
+        # List all orders in the database
         for order in Order.query.all():
             item = InventoryBuilder(order.serialize())
             item.add_control("self", href=url_for("api.orderitem", order=str(order.id)))
             item.add_control("profile", ORDER_PROFILE)
-            body["items"].append(item)
+            body["orders"].append(item)
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
@@ -74,7 +75,16 @@ class OrderItem(Resource):
         body.add_control_customer_to_order(order)  # GET customer to order
         body.add_control_edit_order(order)  # PUT
         body.add_control_delete_order(order)  # DELETE
-        
+        body["productorders"] = []
+
+        # List all product orders for the order
+        for product_order in order.productOrders:
+            item = InventoryBuilder(product_order.serialize())
+            href = url_for("api.productorderitem", productorder=product_order.id)
+            item.add_control("self", href=href)
+            item.add_control("profile", PRODUCTORDER_PROFILE)
+            body["productorders"].append(item)
+
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, order):

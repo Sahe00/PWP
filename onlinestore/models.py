@@ -51,7 +51,7 @@ class Order(db.Model):
     createdAt = db.Column(db.String(50), nullable=False)
 
     customer = db.relationship('Customer', back_populates="orders")
-    productOrder = db.relationship(
+    productOrders = db.relationship(
         'ProductOrder', cascade="all, delete-orphan", back_populates="order")
 
     def serialize(self):
@@ -83,8 +83,8 @@ class ProductOrder(db.Model):
     productId = db.Column(db.Integer, db.ForeignKey('product.id', ondelete="SET NULL"))
     quantity = db.Column(db.Integer, nullable=False)
 
-    order = db.relationship('Order', back_populates="productOrder")
-    product = db.relationship('Product', back_populates="products")
+    order = db.relationship('Order', back_populates="productOrders")
+    product = db.relationship('Product', back_populates="productOrder")
 
     def serialize(self):
         return {
@@ -119,7 +119,7 @@ class Product(db.Model):
     desc = db.Column(db.String(128), nullable=False)
     price = db.Column(db.Float, nullable=False)
 
-    products = db.relationship('ProductOrder', back_populates="product")
+    productOrder = db.relationship('ProductOrder', back_populates="product")
     stock = db.relationship('Stock', cascade="all, delete-orphan", back_populates="stockProduct")
 
     def serialize(self):
