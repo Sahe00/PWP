@@ -192,8 +192,7 @@ class TestCustomerCollection(object):
 
         # test with wrong content type
         resp = client.post(self.RESOURCE_URL, data="notjson")
-        # Request content type must be JSON
-        assert resp.status_code in (400, 415)
+        assert resp.status_code in (400, 415)  # Bad request
 
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid_json)
@@ -281,10 +280,10 @@ class TestCustomerItem(object):
         resp = client.get(self.ALL_CUSTOMERS_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        
+
         # Get url of first customer from the list
         CUSTOMER_URL = body["customers"][0]["@controls"]["self"]["href"]
-        
+
         resp = client.delete(CUSTOMER_URL)
         assert resp.status_code == 204
         resp = client.delete(CUSTOMER_URL)
