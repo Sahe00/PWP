@@ -24,8 +24,8 @@ Flask version: 3.0.1
 Flask SQLAlchemy version: 3.1.1
 
 # How to start
-## Required libraries are in requirements.txt
-    pip install -r requirements.txt
+## Required libraries are in setup.py
+    pip install -e .
 
 ## Setup database
 
