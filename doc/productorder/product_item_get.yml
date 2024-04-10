@@ -1,0 +1,51 @@
+---
+description: Get a product
+responses:
+  '200':
+    description: Product information
+    content:
+      application/json:
+        example:
+        - name: Sateenvarjo
+          desc: Sateenvarjo suojaa sinua sateelta kuin sateelta!
+          price: 20.0
+          namespaces:
+            store:
+              name: /onlinestore/link-relations/
+          controls:
+            self:
+              href: /api/products/Sateenvarjo/
+            profile:
+              href: /profiles/product/
+            collection:
+              href: /api/product/
+            product:get-productorder:
+              method: GET
+              title: Get product order for the product
+              href: /api/productorder/1/
+            product:stock-by-product:
+              method: GET
+              title: Get stock for the product
+              href: /api/stock/1/
+            edit:
+              method: PUT
+              encoding: application/json
+              title: Edit a product
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  desc:
+                    type: string
+                  price:
+                    type: number
+                required:
+                  - name
+                  - desc
+                  - price
+              href: /api/products/Sateenvarjo/
+            delete:
+              method: DELETE
+              title: Delete a product
+              href: /api/customers/Sateenvarjo/

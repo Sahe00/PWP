@@ -1,0 +1,7 @@
+---
+description: Delete a product
+responses:
+  '204':
+    description: Product deleted successfully
+  '404':
+    description: Product not found

@@ -1,0 +1,31 @@
+---
+tags:
+  - Product
+description: Create a new product
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+          desc:
+            type: string
+          price:
+            type: number
+        required:
+          - name
+          - desc
+          - price
+responses:
+  '201':
+    description: Product created successfully
+  '400':
+    description: Invalid request body
+  '409':
+    description: Product already exists
+  '415':
+    description: Request body must be JSON
+  '500':
+    description: Incomplete request - missing fields

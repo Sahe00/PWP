@@ -1,0 +1,55 @@
+---
+tags:
+  - Product
+description: Get the list of products
+responses:
+  '200':
+    description: List of products
+    content:
+      application/json:
+        example:
+          namespaces:
+            store:
+              name: /onlinestore/link-relations/
+          controls:
+            self:
+              href: /api/products/
+            products:get-products:
+              method: GET
+              title: Get all products
+              href: /api/products/
+            products:add-products:
+              method: POST
+              encoding: application/json
+              title: Add a new product
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  desc:
+                    type: string
+                  price:
+                    type: string
+                required:
+                  - name
+                  - desc
+                  - price
+              href: /api/products/
+          products:
+            - name: Sateenvarjo
+              desc: Sateenvarjo suojaa sinua sateelta kuin sateelta!
+              price: 20.0
+              controls:
+                self:
+                  href: /api/products/Sateenvarjo/
+                profile:
+                  href: /profiles/product/
+            - name: Kumpparit
+              desc: Kumiset saappaat, pitävät varpaasi kuivana!
+              price: 10.0
+              controls:
+                self:
+                  href: /api/products/Kumpparit/
+                profile:
+                  href: /profiles/product/

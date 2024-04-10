@@ -1,0 +1,61 @@
+---
+tags:
+  - Customer
+description: Get the list of customers
+responses:
+  '200':
+    description: List of customers
+    content:
+      application/json:
+        example:
+          namespaces:
+            store:
+              name: /onlinestore/link-relations/
+          controls:
+            self:
+              href: /api/customers/
+            customer:get-customers:
+              method: GET
+              title: Get all customers
+              href: /api/customers/
+            customer:add-customer:
+              method: POST
+              encoding: application/json
+              title: Add a new customer
+              schema:
+                type: object
+                properties:
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                  phone:
+                    type: string
+                required:
+                  - firstName
+                  - lastName
+                  - email
+              href: /api/customers/
+          customers:
+            - uuid: b42f07ef-0e88-495e-a84e-dbdfee0483a7
+              firstName: Antti
+              lastName: Heikkinen
+              email: a.heikkinen@hotmail.com
+              phone: "0452230667"
+              controls:
+                self:
+                  href: /api/customers/b42f07ef-0e88-495e-a84e-dbdfee0483a7/
+                profile:
+                  href: /profiles/customer/
+            - uuid: e6a27c66-8013-411b-bff9-27c481ff5687
+              firstName: Ville
+              lastName: Virtanen
+              email: vilutz22@gmail.com
+              phone: "null"
+              controls:
+                self:
+                  href: /api/customers/e6a27c66-8013-411b-bff9-27c481ff5687/
+                profile:
+                  href: /profiles/customer/

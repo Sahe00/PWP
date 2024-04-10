@@ -5,6 +5,7 @@ from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
 
+from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Product
 from onlinestore.utils import InventoryBuilder
@@ -14,6 +15,7 @@ from onlinestore.constants import *
 class ProductCollection(Resource):
 
     # Get list of all products (returns a Mason document)
+    @swag_from('../../doc/product/product_collection_get.yml')
     def get(self):
         body = InventoryBuilder()
 
@@ -34,6 +36,7 @@ class ProductCollection(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Creates a new product to the database
+    @swag_from('../../doc/product/product_collection_post.yml')
     def post(self):
         try:
             name = request.json["name"]
@@ -70,6 +73,7 @@ class ProductCollection(Resource):
 class ProductItem(Resource):
 
     # Retrieves information from a specific product
+    @swag_from('../../doc/product/product_item_get.yml')
     def get(self, name):
         body = InventoryBuilder(name.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
@@ -84,6 +88,7 @@ class ProductItem(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Updates product information to the database
+    @swag_from('../../doc/product/product_item_put.yml')
     def put(self, name):
         if not request.json:
             return "Unsupported media type", 415
@@ -106,6 +111,7 @@ class ProductItem(Resource):
             return "Product not found", 404
 
     # Deletes a product from the database
+    @swag_from('../../doc/product/product_item_delete.yml')
     def delete(self, name):
         try:
             db.session.delete(name)

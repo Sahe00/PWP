@@ -1,0 +1,7 @@
+---
+tags:
+  - Customer
+description: Delete a customer
+responses:
+  '204':
+    description: Customer deleted successfully

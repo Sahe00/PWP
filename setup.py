@@ -1,3 +1,6 @@
+'''
+Setup file for the onlinestore package.
+'''
 from setuptools import find_packages, setup
 
 setup(

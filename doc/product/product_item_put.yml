@@ -1,0 +1,29 @@
+---
+tags:
+  - Product
+description: Update a product
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+          desc:
+            type: string
+          price:
+            type: number
+        required:
+          - name
+          - desc
+          - price
+responses:
+  '201':
+    description: Product updated successfully
+  '400':
+    description: Invalid request body
+  '415':
+    description: Unsupported media type
+  '500':
+    description: Database error

@@ -1,0 +1,49 @@
+---
+tags:
+  - Customer
+description: Get the information of a customer
+responses:
+  '200':
+    description: Customer information
+    content:
+      application/json:
+        example:
+        - uuid: b42f07ef-0e88-495e-a84e-dbdfee0483a7
+          firstName: Antti
+          lastName: Heikkinen
+          email: a.heikkinen@hotmail.com
+          phone: "0452230667"
+          namespaces:
+            store:
+              name: /onlinestore/link-relations/
+          controls:
+            self:
+              href: /api/customers/b42f07ef-0e88-495e-a84e-dbdfee0483a7/
+            profile:
+              href: /profiles/customer/
+            collection:
+              href: /api/customers/
+            edit:
+              method: put
+              encoding: application/json
+              title: Edit a customer
+              schema:
+                type: object
+                properties:
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                  phone:
+                    type: string
+                required:
+                  - firstName
+                  - lastName
+                  - email
+              href: /api/customers/b42f07ef-0e88-495e-a84e-dbdfee0483a7/
+            delete:
+              method: delete
+              title: Delete customer
+              href: /api/customers/b42f07ef-0e88-495e-a84e-dbdfee0483a7/

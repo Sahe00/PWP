@@ -14,7 +14,7 @@ from onlinestore.constants import *
 
 class CustomerCollection(Resource):
     # Returns a list of customers in the database
-    @swag_from('../../doc/customer_collection_get.yml')
+    @swag_from('../../doc/customer/customer_collection_get.yml')
     def get(self):
         body = InventoryBuilder()
 
@@ -34,11 +34,11 @@ class CustomerCollection(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     # Creates a new customer to the database
-    @swag_from('../../doc/customer_collection_post.yml')
+    @swag_from('../../doc/customer/customer_collection_post.yml')
     def post(self):
         if not request.json:
             return "Unsupported media type", 415
-        
+
         # Validate the JSON document against the schema
         try:
             validate(request.json, Customer.json_schema())
@@ -64,6 +64,8 @@ class CustomerCollection(Resource):
 
 
 class CustomerItem(Resource):
+    # Returns a single customer from the database
+    @swag_from('../../doc/customer/customer_item_get.yml')
     def get(self, customer):
         body = InventoryBuilder(customer.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
@@ -83,6 +85,8 @@ class CustomerItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+    # Updates a customer in the database
+    @swag_from('../../doc/customer/customer_item_put.yml')
     def put(self, customer):
         if not request.json:
             return "Unsupported media type", 415
@@ -95,6 +99,7 @@ class CustomerItem(Resource):
         # Check if customer email already exists
         email = request.json["email"]
         email_exists = db.session.query(Customer).filter(Customer.email == email).first()
+        # If email is not the same as customers current email, check that it is unique
         if customer.email != email and email_exists:
             return "Customer with this email already exists", 409
 
@@ -107,6 +112,8 @@ class CustomerItem(Resource):
 
         return Response(status=204)
 
+    # Deletes a customer from the database
+    @swag_from('../../doc/customer/customer_item_delete.yml')
     def delete(self, customer):
         db.session.delete(customer)
         db.session.commit()

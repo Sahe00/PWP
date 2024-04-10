@@ -1,5 +1,7 @@
 ---
-description: Create a new customer
+tags:
+  - Customer
+description: Update a customer
 requestBody:
   content:
     application/json:
@@ -19,22 +21,13 @@ requestBody:
           - lastName
           - email
 responses:
-  '201':
-    description: Customer created successfully
-    content:
-      application/json:
-        example:
-          uuid: b42f07ef-0e88-495e-a84e-dbdfee0483a7
-          firstName: Antti
-          lastName: Heikkinen
-          email: a.heikkinen@hotmail.com
-          phone: "0452230667"
+  '204':
+    description: Customer updated successfully
   '400':
     description: Invalid request body
   '409':
     description: Customer with the same email already exists
   '415':
-    description: Request body must be JSON
+    description: Unsupported media type
   '500':
-    description: Incomplete request - missing fields
-  
+    description: Database error

@@ -1,5 +1,8 @@
+'''
+API Blueprint and API resources
+'''
 from flask import Blueprint
-from flask_restful import Api, url_for
+from flask_restful import Api
 
 # import collections
 from onlinestore.resources.customer import CustomerCollection, CustomerItem
