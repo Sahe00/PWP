@@ -36,6 +36,7 @@ class OrderCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+    @swag_from('../../doc/order/order_collection_post.yml')
     def post(self):
         ''' Create a new order '''
         try:
@@ -73,6 +74,7 @@ class OrderCollection(Resource):
 class OrderItem(Resource):
     """Resource OrderItem"""
 
+    @swag_from('../../doc/order/order_item_get.yml')
     def get(self, order):
         ''' Get order details '''
         body = InventoryBuilder(order.serialize())
@@ -95,6 +97,7 @@ class OrderItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+    @swag_from('../../doc/order/order_item_delete.yml')
     def delete(self, order):
         ''' Delete an order '''
         try:
@@ -105,6 +108,7 @@ class OrderItem(Resource):
         except IntegrityError:
             return "Customer not found", 404
 
+    @swag_from('../../doc/order/order_item_put.yml')
     def put(self, order):
         ''' Update an order '''
         if not request.json:
@@ -125,4 +129,4 @@ class OrderItem(Resource):
 
             return Response(status=204)
         except IntegrityError:
-            return "Customer not found", 404
+            return "Order not found", 404

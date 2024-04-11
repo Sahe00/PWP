@@ -19,7 +19,7 @@ requestBody:
           - desc
           - price
 responses:
-  '201':
+  '204':
     description: Product updated successfully
   '400':
     description: Invalid request body

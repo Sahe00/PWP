@@ -1,0 +1,26 @@
+---
+tags:
+  - Order
+description: Update an order
+requestbody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          customerId:
+            type: integer
+          createdAt:
+            type: string
+        required:
+          - customerId
+          - createdAt
+responses:
+  '204':
+    description: Order updated successfully
+  '404':
+    description: Order not found
+  '415':
+    description: Unsupported media type
+  '500':
+    description: Database error

@@ -1,0 +1,28 @@
+---
+tags:
+  - Order
+description: Create a new order
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          customerId:
+            type: integer
+          createdAt:
+            type: string
+        required:
+          - customerId
+          - createdAt
+responses:
+  '201':
+    description: Order created successfully
+  '400':
+    description: Invalid request body
+  '404':
+    description: Customer with ID <id> not found
+  '415':
+    description: Request body must be JSON
+  '500':
+    description: Incomplete request - missing fields

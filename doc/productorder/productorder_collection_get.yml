@@ -37,17 +37,17 @@ responses:
                   - price
               href: /api/products/
           products:
-            - name: "Sateenvarjo",
-              desc: "Sateenvarjo suojaa sinua sateelta kuin sateelta!",
-              price: "20.0"
+            - name: Sateenvarjo
+              desc: Sateenvarjo suojaa sinua sateelta kuin sateelta!
+              price: 20.0
               controls:
                 self:
                   href: /api/products/Sateenvarjo/
                 profile:
                   href: /profiles/product/
-            - name: "Kumpparit",
-              desc: "Kumiset saappaat, pitävät varpaasi kuivana!",
-              price: "10.0"
+            - name: Kumpparit
+              desc: Kumiset saappaat, pitävät varpaasi kuivana!
+              price: 10.0
               controls:
                 self:
                   href: /api/products/Kumpparit/

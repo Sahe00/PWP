@@ -9,6 +9,7 @@ from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
 
+from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import ProductOrder, Order, Product
 from onlinestore.utils import InventoryBuilder
@@ -18,6 +19,7 @@ from onlinestore.constants import *
 class ProductOrderCollection(Resource):
     """ Resource ProductOrderCollection """
 
+    @swag_from('../../doc/productorder/productorder_collection_get.yml')
     def get(self):
         ''' Get list of all product orders (returns a Mason document) '''
         body = InventoryBuilder()
@@ -37,6 +39,7 @@ class ProductOrderCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+    @swag_from('../../doc/productorder/productorder_collection_post.yml')
     def post(self):
         ''' Create a new product order '''
         try:
@@ -78,6 +81,7 @@ class ProductOrderCollection(Resource):
 class ProductOrderItem(Resource):
     """ Resource ProductOrderItem """
 
+    @swag_from('../../doc/productorder/productorder_item_get.yml')
     def get(self, productorder):
         ''' Get product order details '''
         body = InventoryBuilder(productorder.serialize())
@@ -94,6 +98,7 @@ class ProductOrderItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+    @swag_from('../../doc/productorder/productorder_item_delete.yml')
     def delete(self, productorder):
         ''' Delete a product order '''
         try:
@@ -104,6 +109,7 @@ class ProductOrderItem(Resource):
         except IntegrityError:
             return "Customer not found", 404
 
+    @swag_from('../../doc/productorder/productorder_item_put.yml')
     def put(self, productorder):
         ''' Update a product order '''
         if not request.json:
@@ -122,6 +128,6 @@ class ProductOrderItem(Resource):
             except IntegrityError:
                 return "Database error", 500
 
-            return Response(status=200)
+            return Response(status=204)
         except IntegrityError:
             return "Customer not found", 404
