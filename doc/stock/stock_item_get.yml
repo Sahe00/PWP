@@ -1,0 +1,45 @@
+---
+tags:
+  - Stock
+description: Get stock for a product
+responses:
+  '200':
+    description: Stock for a product
+    content:
+      application/json:
+        example:
+          productId: 1
+          quantity: 8
+          namespaces:
+            store:
+              name: /onlinestore/link-relations/
+          controls:
+            self:
+              href: /api/stock/1/
+            profile:
+              href: /profiles/stock/
+            collection:
+              href: /api/stock/
+            stock:get-product:
+              method: GET
+              title: Get product for the stock
+              href: /api/products/Sateenvarjo/
+            edit:
+              method: PUT
+              encoding: application/json
+              title: Edit stock
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                  quantity:
+                    type: integer
+                required:
+                  - productId
+                  - quantity
+              href: /api/stock/1/
+            delete:
+              method: DELETE
+              title: Delete product stock
+              href: /api/stock/1/

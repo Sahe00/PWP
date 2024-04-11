@@ -1,0 +1,9 @@
+---
+tags:
+  - Stock
+description: Delete product stock
+responses:
+  '204':
+    description: Stock deleted successfully
+  '404':
+    description: Product not found

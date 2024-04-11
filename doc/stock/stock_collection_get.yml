@@ -1,0 +1,35 @@
+---
+tags:
+  - Stock
+description: Get the list of stock items
+responses:
+  '200':
+    description: List of stock
+    content:
+      application/json:
+        example:
+          namespaces:
+            store:
+              name: /onlinestore/link-relations/
+          controls:
+            self:
+              href: /api/stock/
+            stock:get-stocks:
+              method: GET
+              title: Get all stocks
+              href: /api/stock/
+          items:
+            - productId: 1
+              quantity: 8
+              controls:
+                self:
+                  href: /api/stock/1/
+                profile:
+                  href: /profiles/stock/
+            - productId: 2
+              quantity: 21
+              controls:
+                self:
+                  href: /api/stock/2/
+                profile:
+                  href: /profiles/stock/

@@ -10,6 +10,7 @@ from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
 
+from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Stock
 from onlinestore.utils import InventoryBuilder
@@ -21,6 +22,7 @@ class StockCollection(Resource):
     StockCollection resource represents the collection of all products and their stock quantities.
     """
 
+    @swag_from('../../doc/stock/stock_collection_get.yml')
     def get(self):
         ''' Get list of all stock (returns a Mason document) '''
         body = InventoryBuilder()
@@ -38,6 +40,7 @@ class StockCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+    @swag_from('../../doc/stock/stock_collection_post.yml')
     def post(self):
         ''' Create a new stock item '''
         try:
@@ -75,6 +78,7 @@ class StockCollection(Resource):
 class StockItem(Resource):
     """ Resource StockItem """
 
+    @swag_from('../../doc/stock/stock_item_get.yml')
     def get(self, product):
         ''' Get stock for a specific product (returns a Mason document) '''
         body = InventoryBuilder(product.serialize())
@@ -88,6 +92,7 @@ class StockItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+    @swag_from('../../doc/stock/stock_item_put.yml')
     def put(self, product):
         ''' Update stock quantity for product '''
         if not request.json:
@@ -114,10 +119,11 @@ class StockItem(Resource):
             except IntegrityError:
                 return "Database error", 500
 
-            return Response(status=200)
+            return Response(status=204)
         except IntegrityError:
             return "Product not found", 404
 
+    @swag_from('../../doc/stock/stock_item_delete.yml')
     def delete(self, product):
         ''' Delete a product's stock '''
         try:

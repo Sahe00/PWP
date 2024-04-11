@@ -1,0 +1,26 @@
+---
+tags:
+  - Stock
+description: Update a stock item
+requestbody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          productId:
+            type: integer
+          quantity:
+            type: integer
+        required:
+          - productId
+          - quantity
+responses:
+  '204':
+    description: Stock for product updated successfully
+  '404':
+    description: Product not found
+  '415':
+    description: Unsupported media type
+  '500':
+    description: Database error

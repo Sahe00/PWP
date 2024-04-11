@@ -1,0 +1,28 @@
+---
+tags:
+  - Stock
+description: Create a new stock item
+requestbody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          productId:
+            type: integer
+          quantity:
+            type: integer
+        required:
+          - productId
+          - quantity
+responses:
+  '201':
+    description: Stock created successfully
+  '400':
+    description: Invalid request body
+  '409':
+    description: Product already exists
+  '415':
+    description: Request body must be JSON
+  '500':
+    description: Incomplete request - missing fields
