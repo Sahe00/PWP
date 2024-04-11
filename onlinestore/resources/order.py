@@ -6,6 +6,7 @@ from flask_restful import Resource
 from jsonschema import ValidationError, draft7_format_checker, validate
 from werkzeug.exceptions import BadRequest
 
+from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Order, Customer
 from onlinestore.utils import InventoryBuilder
@@ -15,6 +16,7 @@ from onlinestore.constants import *
 class OrderCollection(Resource):
     """Resource OrderCollection"""
 
+    @swag_from('../../doc/order/order_collection_get.yml')
     def get(self):
         ''' Get list of all orders (returns a Mason document) '''
         body = InventoryBuilder()

@@ -1,4 +1,6 @@
 ---
+tags:
+  - Productorder
 description: Delete a product
 responses:
   '204':

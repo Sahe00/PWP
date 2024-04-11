@@ -1,4 +1,3 @@
-""" Create test database """
 import sys
 import os
 from datetime import datetime
@@ -13,7 +12,7 @@ def create_test_db():
         os.remove("instance/temp.db")
 
     db.create_all()
-    _populate_db()
+    _populate_db()  # Fill the database with test data
     print(f"Created testing database")
 
 
@@ -25,18 +24,21 @@ def create_db(arg):
         os.remove("instance/test.db")
 
     s = ""
-    #ctx = app.app_context()
-    #ctx.push()
+    # ctx = app.app_context()
+    # ctx.push()
     db.create_all()
     if arg == "fill":
         _populate_db()
         s += "with fill"
-    #ctx.pop()
+    # ctx.pop()
     print(f"Created database {s}")
 
-def _populate_db():
-    ''' Populate the database with test data '''
 
+def _populate_db():
+    '''
+    Populate the database with test data
+    '''
+    
     antti = Customer(
         firstName="Antti",
         lastName="Heikkinen",
@@ -113,15 +115,17 @@ def _populate_db():
     )
     db.session.commit()
 
+
 def main():
     ''' Main function '''
     try:
-        if sys.argv[1] == "fill": #  python createdatabase.py fill
+        if sys.argv[1] == "fill":  # python createdatabase.py fill
             create_db("fill")
         else:
             print("Wrong argument")
-    except IndexError: #  python createdatabase.py
+    except IndexError:  # python createdatabase.py
         create_db("")
+
 
 if __name__ == "__main__":
     main()

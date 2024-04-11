@@ -1,4 +1,6 @@
 ---
+tags:
+  - Productorder
 description: Create a new product
 requestBody:
   content:

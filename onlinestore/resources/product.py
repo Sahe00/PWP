@@ -40,36 +40,29 @@ class ProductCollection(Resource):
     @swag_from('../../doc/product/product_collection_post.yml')
     def post(self):
         ''' Create a new product '''
+        if not request.json:
+            return "Unsupported media type", 415
         try:
-            name = request.json["name"]
-            if name is None:
-                return "Request content type must be JSON", 415
+            validate(request.json, Product.json_schema())
+        except ValidationError as e:
+            raise BadRequest(description=str(e))  # 400 Bad request
 
-            # Validate the JSON document against the schema
-            try:
-                validate(request.json, Product.json_schema(), format_checker=draft7_format_checker)
-            except ValidationError as e:
-                raise BadRequest(description=str(e))  # 400 Bad request
+        name = request.json["name"]
+        if db.session.query(Product).filter(Product.name == name).first():
+            return "Product already exists", 409
 
-            if db.session.query(Product).filter(Product.name == name).first():
-                return "Product already exists", 409
-            try:
-                product = Product()
-                product.deserialize(request.json)
-            except ValueError:
-                return "Invalid request body", 400
-            try:
-                db.session.add(product)
-                db.session.commit()
+        product = Product()
+        product.deserialize(request.json)
 
-                return Response(status=201, headers={
-                    "Location": url_for("api.productitem", name=product.name)
-                })
-            except Exception as e:  # IntegrityError:
-                db.session.rollback()
-                return f"Incomplete request - missing fields - {e}", 500
-        except (KeyError, ValueError):
-            return "Invalid request body", 400
+        try:
+            db.session.add(product)
+            db.session.commit()
+        except Exception as e:  # IntegrityError
+            return f"Incomplete request - missing fields - {e}", 500
+
+        return Response(status=201, headers={
+            "Location": url_for("api.productitem", name=product.name)
+        })
 
 
 class ProductItem(Resource):

@@ -110,7 +110,7 @@ def _check_control_put_method(ctrl, client, obj, json_obj):
     Checks a PUT type control from a JSON object be it root document or an item
     in a collection. In addition to checking the "href" attribute, also checks
     that method, encoding and schema can be found from the control. Also
-    validates a valid sensor against the schema of the control to ensure that
+    validates a valid object against the schema of the control to ensure that
     they match. Finally checks that using the control results in the correct
     status code of 204.
     """
@@ -122,7 +122,6 @@ def _check_control_put_method(ctrl, client, obj, json_obj):
     schema = ctrl_obj["schema"]
     assert method == "put"
     assert encoding == "json"
-    json_obj["uuid"] = obj["uuid"]
     validate(json_obj, schema)
     resp = client.put(href, json=json_obj)
     assert resp.status_code == 204
@@ -163,12 +162,17 @@ def _get_customer_json(number=1):
     return customer
 
 
-def _get_product_json(number=1):
+def _get_product_json(number=None):
     """
     Creates a valid product JSON object to be used for PUT and POST tests.
     """
+    if number is None:
+        name = "Sateenvarjo"
+    else:
+        name = "Sateenvarjo" + str(number)
+
     product = {
-        "name": "Sateenvarjo-2",
+        "name": name,
         "desc": "Sateenvarjo suojaa sinua sateelta kuin sateelta!",
         "price": 20.00
     }
@@ -249,6 +253,9 @@ class TestCustomerItem(object):
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
         valid_json = _get_customer_json()
+        # Add missing uuid to the json object because it is generated in the models
+        # uuid = ... default=lambda: str(uuid.uuid4()) ...
+        valid_json["uuid"] = body["uuid"]
         _check_control_put_method("edit", client, body, valid_json)
         _check_control_delete_method("delete", client, body)
         resp = client.get(self.INVALID_URL)
@@ -320,7 +327,7 @@ class TestProductCollection(object):
         assert resp.status_code == 200
         body = json.loads(resp.data)
         _check_namespace(client, body)
-        valid_json = _get_product_json()
+        valid_json = _get_product_json(2)
         _check_control_post_method("product:add-product", client, body, valid_json)
         assert len(body["products"]) == 2
         for item in body["products"]:
@@ -329,7 +336,7 @@ class TestProductCollection(object):
 
     def test_post(self, client):
         ''' Test POST method for the ProductCollection resource. '''
-        valid_json = _get_product_json()
+        valid_json = _get_product_json(2)
 
         # test with wrong content type
         resp = client.post(self.RESOURCE_URL, data="notjson")
@@ -353,3 +360,62 @@ class TestProductCollection(object):
         valid_json.pop("name")
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 400  # Invalid request body
+
+
+class TestProductItem(object):
+
+    ALL_PRODUCTS_URL = "/api/products/"
+    INVALID_URL = "/api/products/non-product-x/"
+
+    def test_get(self, client):
+        resp = client.get(self.ALL_PRODUCTS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first product from the list
+        PRODUCT_URL = body["products"][0]["@controls"]["self"]["href"]
+        resp = client.get(PRODUCT_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        _check_control_get_method("self", client, body)
+        _check_control_get_method("profile", client, body)
+        _check_control_get_method("collection", client, body)
+        valid_json = _get_product_json()
+        _check_control_put_method("edit", client, body, valid_json)
+        _check_control_delete_method("delete", client, body)
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
+
+    def test_put(self, client):
+        valid_json = _get_product_json()
+
+        resp = client.get(self.ALL_PRODUCTS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first product from the list
+        PRODUCT_URL = body["products"][0]["@controls"]["self"]["href"]
+
+        # Test with wrong content type
+        resp = client.put(PRODUCT_URL, data="notjson", headers=Headers({"Content-Type": "text"}))
+        assert resp.status_code in (400, 415)
+
+        # Test with invalid product URL
+        resp = client.put(self.INVALID_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+
+    def test_delete(self, client):
+        resp = client.get(self.ALL_PRODUCTS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first product from the list
+        PRODUCT_URL = body["products"][0]["@controls"]["self"]["href"]
+
+        resp = client.delete(PRODUCT_URL)
+        assert resp.status_code == 204
+        resp = client.delete(PRODUCT_URL)
+        assert resp.status_code == 404
+        resp = client.delete(self.INVALID_URL)
+        assert resp.status_code == 404

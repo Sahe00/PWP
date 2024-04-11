@@ -1,0 +1,51 @@
+tags:
+  - Order
+description: Get the list of orders
+responses:
+  '200':
+    description: List of orders
+    content:
+      application/json:
+        example:
+          namespaces:
+            store:
+              name: /onlinestore/link-relations/
+          controls:
+            self:
+              href: /api/orders/
+            order:get-orders:
+              method: GET
+              title: Get all orders
+              href: /api/products/
+            order:add-orders:
+              method: POST
+              encoding: application/json
+              title: Add a new order
+              schema:
+                type: object
+                properties:
+                  customerId:
+                    type: integer
+                  createdAt:
+                    type: string
+                required:
+                  - customerId
+                  - createdAt
+              href: /api/orders/
+          orders:
+            - id: 1
+              customerId: 1
+              createdAt: 2024-02-27 16:44:47
+              controls:
+                self:
+                  href: /api/orders/1/
+                profile:
+                  href: /profiles/order/
+            - id: 2
+              customerId: 1
+              createdAt: 2024-03-01 12:30:00
+              controls:
+                self:
+                  href: /api/orders/2/
+                profile:
+                  href: /profiles/order/

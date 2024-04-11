@@ -1,4 +1,6 @@
 ---
+tags:
+  - Productorder
 description: Get the list of products
 responses:
   '200':
@@ -12,11 +14,11 @@ responses:
           controls:
             self:
               href: /api/products/
-            products:get-products:
+            product:get-products:
               method: GET
               title: Get all products
               href: /api/products/
-            products:add-products:
+            product:add-products:
               method: POST
               encoding: application/json
               title: Add a new product
