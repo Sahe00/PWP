@@ -3,7 +3,7 @@ import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
-from jsonschema import ValidationError,  validate
+from jsonschema import ValidationError, validate
 from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from

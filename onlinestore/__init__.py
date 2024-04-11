@@ -6,9 +6,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flasgger import Swagger
 from onlinestore.constants import *
-from onlinestore import api, models
-from onlinestore.utils import ProductConverter, CustomerConverter, OrderConverter
-from onlinestore.utils import ProductOrderConverter, StockConverter
 
 
 db = SQLAlchemy()
@@ -39,6 +36,9 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
+    from onlinestore import api, models
+    from onlinestore.utils import ProductConverter, CustomerConverter, OrderConverter
+    from onlinestore.utils import ProductOrderConverter, StockConverter
     app.url_map.converters["product"] = ProductConverter
     app.url_map.converters["customer"] = CustomerConverter
     app.url_map.converters["order"] = OrderConverter
