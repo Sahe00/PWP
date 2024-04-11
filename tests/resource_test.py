@@ -15,7 +15,7 @@ from sqlalchemy import event
 # from sqlalchemy.exc import IntegrityError, StatementError
 from werkzeug.datastructures import Headers
 from onlinestore import create_app, db
-from onlinestore.models import Customer#, Product, Order, ProductOrder, Stock
+from onlinestore.models import Customer  # , Product, Order, ProductOrder, Stock
 
 
 @event.listens_for(Engine, "connect")
@@ -177,6 +177,17 @@ def _get_product_json(number=None):
         "price": 20.00
     }
     return product
+
+
+def _get_order_json():
+    """
+    Creates a valid order JSON object to be used for PUT and POST tests.
+    """
+    order = {
+        "customerId": 2,
+        "createdAt": "2024-04-01",
+    }
+    return order
 
 
 class TestCustomerCollection(object):
@@ -347,7 +358,7 @@ class TestProductCollection(object):
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 201
 
-        # /api/products/Sateenvarjo-2/
+        # /api/products/Sateenvarjo2/
         assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
@@ -416,6 +427,111 @@ class TestProductItem(object):
         resp = client.delete(PRODUCT_URL)
         assert resp.status_code == 204
         resp = client.delete(PRODUCT_URL)
+        assert resp.status_code == 404
+        resp = client.delete(self.INVALID_URL)
+        assert resp.status_code == 404
+
+
+class TestOrderCollection(object):
+    """
+    Tests for the OrderCollection resource.
+    """
+
+    RESOURCE_URL = "/api/orders/"
+
+    def test_get(self, client):
+        ''' Test GET method for the OrderCollection resource. '''
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        valid_json = _get_order_json()
+        _check_control_post_method("order:add-order", client, body, valid_json)
+        assert len(body["orders"]) == 1  # One order in the database
+        for item in body["orders"]:
+            _check_control_get_method("self", client, item)
+            _check_control_get_method("profile", client, item)
+
+    def test_post(self, client):
+        ''' Test POST method for the OrderCollection resource. '''
+        valid_json = _get_order_json()
+
+        # test with wrong content type
+        resp = client.post(self.RESOURCE_URL, data="notjson")
+        # Request content type must be JSON
+        assert resp.status_code in (400, 415)
+
+        # test with valid and see that it exists afterward
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 201
+
+        # /api/orders/2/
+        # TypeError: can only concatenate str (not "int") to str
+        assert resp.headers["Location"].endswith(
+            self.RESOURCE_URL + str(valid_json["customerId"]) + "/")
+        resp = client.get(resp.headers["Location"])
+        assert resp.status_code == 200
+
+        # remove required "createdAt" field and try to post again, error 400 expected
+        valid_json.pop("createdAt")
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 400  # Invalid request body
+
+
+class TestOrderItem(object):
+
+    ALL_ORDERS_URL = "/api/orders/"
+    INVALID_URL = "/api/orders/non-order-x/"
+
+    def test_get(self, client):
+        resp = client.get(self.ALL_ORDERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first order from the list
+        ORDER_URL = body["orders"][0]["@controls"]["self"]["href"]
+        resp = client.get(ORDER_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        _check_control_get_method("self", client, body)
+        _check_control_get_method("profile", client, body)
+        _check_control_get_method("collection", client, body)
+        valid_json = _get_order_json()
+        _check_control_put_method("edit", client, body, valid_json)
+        _check_control_delete_method("delete", client, body)
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
+
+    def test_put(self, client):
+        valid_json = _get_order_json()
+
+        resp = client.get(self.ALL_ORDERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first order from the list
+        ORDER_URL = body["orders"][0]["@controls"]["self"]["href"]
+
+        # Test with wrong content type
+        resp = client.put(ORDER_URL, data="notjson", headers=Headers({"Content-Type": "text"}))
+        assert resp.status_code in (400, 415)
+
+        # Test with invalid order URL
+        resp = client.put(self.INVALID_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+
+    def test_delete(self, client):
+        resp = client.get(self.ALL_ORDERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first product from the list
+        ORDER_URL = body["orders"][0]["@controls"]["self"]["href"]
+
+        resp = client.delete(ORDER_URL)
+        assert resp.status_code == 204
+        resp = client.delete(ORDER_URL)
         assert resp.status_code == 404
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404

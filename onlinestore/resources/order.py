@@ -38,36 +38,30 @@ class OrderCollection(Resource):
 
     def post(self):
         ''' Create a new order '''
+        if not request.json:
+            return "Unsupported media type", 415
+
+        # Validate the JSON document against the schema
         try:
-            customerId = request.json["customerId"]
-            if customerId is None:
-                return "Request content type must be JSON", 415
+            validate(request.json, Order.json_schema())
+        except ValidationError as e:
+            raise BadRequest(description=str(e))  # 400 Bad request
 
-            # Validate the JSON document against the schema
-            try:
-                validate(request.json, Order.json_schema(), format_checker=draft7_format_checker)
-            except ValidationError as e:
-                raise BadRequest(description=str(e))  # 400 Bad request
+        customerId = request.json["customerId"]
+        if db.session.query(Customer).filter(Customer.id == customerId).first() is None:
+            return f"Customer with ID {customerId} not found", 404
 
-            if db.session.query(Customer).filter(Customer.id == customerId).first() is None:
-                return f"Customer with ID {customerId} not found", 404
-            try:
-                order = Order()
-                order.deserialize(request.json)
-            except ValueError:
-                return "Invalid request body", 400
-            try:
-                db.session.add(order)
-                db.session.commit()
+        order = Order()
+        order.deserialize(request.json)
 
-                order_uri = url_for("api.orderitem", id=order.id)
+        try:
+            db.session.add(order)
+            db.session.commit()
+        except Exception as e:  # IntegrityError
+            return f"Incomplete request - missing fields - {e}", 500
 
-                return Response(status=201, headers={"Location": order_uri})
-            except Exception as e:  # IntegrityError:
-                db.session.rollback()
-                return f"Incomplete request - missing fields - {e}", 500
-        except (KeyError, ValueError):
-            return "Invalid request body", 400
+        order_uri = url_for("api.orderitem", order=order.id)
+        return Response(status=201, headers={"Location": order_uri})
 
 
 class OrderItem(Resource):
@@ -103,7 +97,7 @@ class OrderItem(Resource):
 
             return Response(status=204)
         except IntegrityError:
-            return "Customer not found", 404
+            return "Order not found", 404
 
     def put(self, order):
         ''' Update an order '''
@@ -125,4 +119,4 @@ class OrderItem(Resource):
 
             return Response(status=204)
         except IntegrityError:
-            return "Customer not found", 404
+            return "Order not found", 404
