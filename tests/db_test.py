@@ -1,3 +1,4 @@
+""" Tests for the database models of onlinestore """
 import os
 import pytest
 import tempfile
@@ -12,6 +13,7 @@ from onlinestore.models import Customer, Order, Product, ProductOrder, Stock
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
+    ''' This function is called when a connection to the database is made '''
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
@@ -20,6 +22,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 # we don't need a client for database testing, just the db handle
 @pytest.fixture(scope="function")
 def app():
+    ''' Create and configure a new app instance for each test '''
     # Create a temporary database file for testing purposes
     test_config = {
         "SQLALCHEMY_DATABASE_URI": 'sqlite:///database_test.db',
@@ -32,13 +35,14 @@ def app():
         db.create_all()
 
     yield app
-    
+
     # Teardown after testing
     with app.app_context():
         db.session.remove()
         db.drop_all()  # drop all tables in the database
 
 def _get_customer(number=1):
+    ''' Helper function to create a customer instance '''
     return Customer(
         #uuid="testuuid-{}".format(number),
         firstName="firstName-{}".format(number),
@@ -48,6 +52,7 @@ def _get_customer(number=1):
     )
 
 def _get_product(number=1):
+    ''' Helper function to create a product instance '''
     return Product(
         name="product-{}".format(number),
         desc="desc-{}".format(number),
@@ -55,12 +60,14 @@ def _get_product(number=1):
     )
 
 def _get_order(customer):
+    ''' Helper function to create an order instance '''
     return Order(
         customerId=customer,
         createdAt=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     )
 
 def _get_product_order(order, product, quantity=1):
+    ''' Helper function to create a product order instance '''
     return ProductOrder(
         order=order,
         product=product,
@@ -68,6 +75,7 @@ def _get_product_order(order, product, quantity=1):
     )
 
 def _get_stock(stockProduct, quantity=1):
+    ''' Helper function to create a stock instance '''
     return Stock(
         quantity=quantity,
         stockProduct=stockProduct

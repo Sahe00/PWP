@@ -1,3 +1,8 @@
+"""
+This module defines the resources for the stock of products in the online store.
+The StockCollection resource handles GET and POST requests for the stock of products.
+The StockItem resource handles GET, PUT, and DELETE requests for a specific product's stock.
+"""
 import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
@@ -15,9 +20,9 @@ class StockCollection(Resource):
     """
     StockCollection resource represents the collection of all products and their stock quantities.
     """
-    # Retrieve all products and their stock quantities
 
     def get(self):
+        ''' Get list of all stock (returns a Mason document) '''
         body = InventoryBuilder()
 
         body.add_namespace("stock", LINK_RELATIONS_URL)
@@ -33,8 +38,8 @@ class StockCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # TODO: Unnecessary method?
     def post(self):
+        ''' Create a new stock item '''
         try:
             productId = request.json["productId"]
             if productId is None:
@@ -68,9 +73,10 @@ class StockCollection(Resource):
 
 
 class StockItem(Resource):
+    """ Resource StockItem """
 
-    # Retrieve stock quantity for a specific product
     def get(self, product):
+        ''' Get stock for a specific product (returns a Mason document) '''
         body = InventoryBuilder(product.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
         body.add_control("self", href=url_for("api.stockitem", product=product.productId))
@@ -82,8 +88,8 @@ class StockItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # Update stock quantity for product
     def put(self, product):
+        ''' Update stock quantity for product '''
         if not request.json:
             return "Unsupported media type", 415
 
@@ -112,8 +118,8 @@ class StockItem(Resource):
         except IntegrityError:
             return "Product not found", 404
 
-    # Delete stock quantity for product
     def delete(self, product):
+        ''' Delete a product's stock '''
         try:
             db.session.delete(product)
             db.session.commit()

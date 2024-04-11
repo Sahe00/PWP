@@ -1,3 +1,4 @@
+""" This module contains the resources for the product endpoints. """
 import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
@@ -13,10 +14,11 @@ from onlinestore.constants import *
 
 
 class ProductCollection(Resource):
+    """ Resource ProductCollection """
 
-    # Get list of all products (returns a Mason document)
     @swag_from('../../doc/product/product_collection_get.yml')
     def get(self):
+        ''' Get list of all products (returns a Mason document) '''
         body = InventoryBuilder()
 
         body.add_namespace("store", LINK_RELATIONS_URL)
@@ -35,9 +37,9 @@ class ProductCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # Creates a new product to the database
     @swag_from('../../doc/product/product_collection_post.yml')
     def post(self):
+        ''' Create a new product '''
         try:
             name = request.json["name"]
             if name is None:
@@ -71,10 +73,11 @@ class ProductCollection(Resource):
 
 
 class ProductItem(Resource):
+    """ Resource ProductItem """
 
-    # Retrieves information from a specific product
     @swag_from('../../doc/product/product_item_get.yml')
     def get(self, name):
+        ''' Get product information '''
         body = InventoryBuilder(name.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
         body.add_control("self", href=url_for("api.productitem", name=name.name))
@@ -87,9 +90,9 @@ class ProductItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # Updates product information to the database
     @swag_from('../../doc/product/product_item_put.yml')
     def put(self, name):
+        ''' Update product information '''
         if not request.json:
             return "Unsupported media type", 415
 
@@ -110,9 +113,9 @@ class ProductItem(Resource):
         except IntegrityError:
             return "Product not found", 404
 
-    # Deletes a product from the database
     @swag_from('../../doc/product/product_item_delete.yml')
     def delete(self, name):
+        ''' Delete a product '''
         try:
             db.session.delete(name)
             db.session.commit()

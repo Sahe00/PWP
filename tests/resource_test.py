@@ -1,24 +1,26 @@
+""" Tests for the REST API resources. """
 import json
-import os
-import uuid
-from flask_sqlalchemy import SQLAlchemy
+# import os
+# import uuid
+# from flask_sqlalchemy import SQLAlchemy
 from jsonschema import validate
 import pytest
-import tempfile
-import time
+# import tempfile
+# import time
 import createdatabase
-from datetime import datetime
-from flask.testing import FlaskClient
+# from datetime import datetime
+# from flask.testing import FlaskClient
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
-from sqlalchemy.exc import IntegrityError, StatementError
+# from sqlalchemy.exc import IntegrityError, StatementError
 from werkzeug.datastructures import Headers
 from onlinestore import create_app, db
-from onlinestore.models import Customer, Product, Order, ProductOrder, Stock
+from onlinestore.models import Customer#, Product, Order, ProductOrder, Stock
 
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
+    ''' Enable foreign key support for SQLite '''
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
@@ -28,6 +30,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 # The fixture is invoked once for each test function that uses it
 @pytest.fixture(scope="function")
 def client():
+    ''' Create a Flask test client for testing the API '''
     # Create a temporary database file for testing purposes
     test_config = {
         "SQLALCHEMY_DATABASE_URI": 'sqlite:///temp.db',
@@ -48,12 +51,13 @@ def client():
 
 
 def _populate_db():
+    ''' Populate the database with test data '''
     for i in range(1, 4):
         customer = Customer(
-            firstName="test-sensor-{}".format(i),
+            firstName=f"test-sensor-{i}",
             lastName="testsensor",
-            email="testEmail-{}".format(i),
-            phone="testPhone-{}".format(i)
+            email=f"testEmail-{i}",
+            phone=f"testPhone-{i}"
         )
         db.session.add(customer)
 
@@ -172,10 +176,14 @@ def _get_product_json(number=1):
 
 
 class TestCustomerCollection(object):
+    """
+    Tests for the CustomerCollection resource.
+    """
 
     RESOURCE_URL = "/api/customers/"
 
     def test_get(self, client):
+        ''' Test GET method for the CustomerCollection resource. '''
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -188,6 +196,7 @@ class TestCustomerCollection(object):
             _check_control_get_method("profile", client, item)
 
     def test_post(self, client):
+        ''' Test POST method for the CustomerCollection resource. '''
         valid_json = _get_customer_json()
 
         # test with wrong content type
@@ -217,11 +226,15 @@ class TestCustomerCollection(object):
 
 
 class TestCustomerItem(object):
+    """
+    Tests for the CustomerItem resource.
+    """
 
     ALL_CUSTOMERS_URL = "/api/customers/"
     INVALID_URL = "/api/customers/non-customer-x/"
 
     def test_get(self, client):
+        ''' Test GET method for the CustomerItem resource. '''
         resp = client.get(self.ALL_CUSTOMERS_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -242,6 +255,7 @@ class TestCustomerItem(object):
         assert resp.status_code == 404
 
     def test_put(self, client):
+        ''' Test PUT method for the CustomerItem resource. '''
         valid_json = _get_customer_json()
 
         resp = client.get(self.ALL_CUSTOMERS_URL)
@@ -277,6 +291,7 @@ class TestCustomerItem(object):
         assert resp.status_code == 400
 
     def test_delete(self, client):
+        ''' Test DELETE method for the CustomerItem resource. '''
         resp = client.get(self.ALL_CUSTOMERS_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -293,10 +308,14 @@ class TestCustomerItem(object):
 
 
 class TestProductCollection(object):
+    """
+    Tests for the ProductCollection resource.
+    """
 
     RESOURCE_URL = "/api/products/"
 
     def test_get(self, client):
+        ''' Test GET method for the ProductCollection resource. '''
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -309,6 +328,7 @@ class TestProductCollection(object):
             _check_control_get_method("profile", client, item)
 
     def test_post(self, client):
+        ''' Test POST method for the ProductCollection resource. '''
         valid_json = _get_product_json()
 
         # test with wrong content type

@@ -1,3 +1,7 @@
+"""
+This module defines the REST API for the ProductOrder resource. It handles
+GET, POST, PUT, and DELETE requests for the ProductOrder resource.
+"""
 import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
@@ -12,7 +16,10 @@ from onlinestore.constants import *
 
 
 class ProductOrderCollection(Resource):
+    """ Resource ProductOrderCollection """
+
     def get(self):
+        ''' Get list of all product orders (returns a Mason document) '''
         body = InventoryBuilder()
 
         body.add_namespace("store", LINK_RELATIONS_URL)
@@ -30,8 +37,8 @@ class ProductOrderCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-
     def post(self):
+        ''' Create a new product order '''
         try:
             orderId = request.json["orderId"]
             productId = request.json["productId"]
@@ -69,7 +76,10 @@ class ProductOrderCollection(Resource):
 
 
 class ProductOrderItem(Resource):
+    """ Resource ProductOrderItem """
+
     def get(self, productorder):
+        ''' Get product order details '''
         body = InventoryBuilder(productorder.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
         body.add_control("self", href=url_for("api.productorderitem", productorder=productorder.id))
@@ -77,14 +87,15 @@ class ProductOrderItem(Resource):
         body.add_control("collection", href=url_for("api.productordercollection"))
         body.add_control_edit_productorder(productorder)  # PUT
         body.add_control_delete_productorder(productorder)  # DELETE
-        
+
         # Get order and product details for the product order
         body.add_control_order(productorder)  # GET order details
         body.add_control_product(productorder)  # GET product details
-        
+
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, productorder):
+        ''' Delete a product order '''
         try:
             db.session.delete(productorder)
             db.session.commit()
@@ -94,6 +105,7 @@ class ProductOrderItem(Resource):
             return "Customer not found", 404
 
     def put(self, productorder):
+        ''' Update a product order '''
         if not request.json:
             return "Unsupported media type", 415
 

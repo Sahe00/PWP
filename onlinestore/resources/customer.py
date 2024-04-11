@@ -1,8 +1,9 @@
+""" Customer resource module """
 import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
-from jsonschema import ValidationError, draft7_format_checker, validate
+from jsonschema import ValidationError,  validate
 from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from
@@ -13,9 +14,11 @@ from onlinestore.constants import *
 
 
 class CustomerCollection(Resource):
-    # Returns a list of customers in the database
+    """ Resource CustomerCollection """
+
     @swag_from('../../doc/customer/customer_collection_get.yml')
     def get(self):
+        ''' Get list of all customers (returns a Mason document) '''
         body = InventoryBuilder()
 
         body.add_namespace("store", LINK_RELATIONS_URL)
@@ -33,9 +36,9 @@ class CustomerCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # Creates a new customer to the database
     @swag_from('../../doc/customer/customer_collection_post.yml')
     def post(self):
+        ''' Create a new customer '''
         if not request.json:
             return "Unsupported media type", 415
 
@@ -64,9 +67,11 @@ class CustomerCollection(Resource):
 
 
 class CustomerItem(Resource):
-    # Returns a single customer from the database
+    """ Resource CustomerItem """
+
     @swag_from('../../doc/customer/customer_item_get.yml')
     def get(self, customer):
+        ''' Get a single customer from the database '''
         body = InventoryBuilder(customer.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
         body.add_control("self", href=url_for("api.customeritem", customer=customer.uuid))
@@ -85,9 +90,9 @@ class CustomerItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # Updates a customer in the database
     @swag_from('../../doc/customer/customer_item_put.yml')
     def put(self, customer):
+        ''' Update a customer in the database '''
         if not request.json:
             return "Unsupported media type", 415
 
@@ -112,9 +117,9 @@ class CustomerItem(Resource):
 
         return Response(status=204)
 
-    # Deletes a customer from the database
     @swag_from('../../doc/customer/customer_item_delete.yml')
     def delete(self, customer):
+        ''' Delete a customer from the database '''
         db.session.delete(customer)
         db.session.commit()
 

@@ -1,3 +1,4 @@
+""" Create test database """
 import sys
 import os
 from datetime import datetime
@@ -6,10 +7,11 @@ from onlinestore.models import Customer, Order, Product, Stock, ProductOrder
 
 
 def create_test_db():
+    ''' Create a test database '''
     # Delete temp.db if it exists
     if os.path.exists("instance/temp.db"):
         os.remove("instance/temp.db")
-        
+
     db.create_all()
     _populate_db()
     print(f"Created testing database")
@@ -17,6 +19,7 @@ def create_test_db():
 
 # This script creates the database and tables. It should be run once before running the app.
 def create_db(arg):
+    ''' Create a database '''
     # Delete test.db if it exists
     if os.path.exists("instance/test.db"):
         os.remove("instance/test.db")
@@ -32,6 +35,7 @@ def create_db(arg):
     print(f"Created database {s}")
 
 def _populate_db():
+    ''' Populate the database with test data '''
 
     antti = Customer(
         firstName="Antti",
@@ -39,14 +43,14 @@ def _populate_db():
         email="a.heikkinen@luukku.com",
         phone="0441234569"
     )
-    
+
     pekka = Customer(
         firstName="Pekka",
         lastName="Pakkala",
         email="pekka.pakkala@gmail.com",
         phone="0441254561"
     )
-    
+
     jukka = Customer(
         firstName="Jukka",
         lastName="Junnila",
@@ -110,6 +114,7 @@ def _populate_db():
     db.session.commit()
 
 def main():
+    ''' Main function '''
     try:
         if sys.argv[1] == "fill": #  python createdatabase.py fill
             create_db("fill")

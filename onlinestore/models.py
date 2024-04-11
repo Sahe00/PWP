@@ -1,3 +1,6 @@
+"""
+Database models for onlinestore API
+"""
 import uuid
 import click
 from flask.cli import with_appcontext
@@ -5,6 +8,7 @@ from onlinestore import db
 
 
 class Customer(db.Model):
+    """ Customer model """
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     uuid = db.Column(db.String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     firstName = db.Column(db.String(50), nullable=False)
@@ -15,6 +19,7 @@ class Customer(db.Model):
     orders = db.relationship('Order', back_populates="customer")
 
     def serialize(self):
+        ''' Return customer data as a dictionary '''
         return {
             'uuid': self.uuid,
             'firstName': self.firstName,
@@ -24,6 +29,7 @@ class Customer(db.Model):
         }
 
     def deserialize(self, data):
+        ''' Update customer data from a dictionary '''
         self.firstName = data['firstName']
         self.lastName = data['lastName']
         self.email = data['email']
@@ -31,6 +37,7 @@ class Customer(db.Model):
 
     @staticmethod
     def json_schema():
+        ''' JSON schema for customer data '''
         return {
             "type": "object",
             "properties": {
@@ -44,6 +51,7 @@ class Customer(db.Model):
 
 
 class Order(db.Model):
+    """ Order model """
     id = db.Column(db.Integer, primary_key=True, nullable=False)
 
     # Set foreign key to null if customer is deleted
@@ -55,6 +63,7 @@ class Order(db.Model):
         'ProductOrder', cascade="all, delete-orphan", back_populates="order")
 
     def serialize(self):
+        ''' Return order data as a dictionary '''
         return {
             'id': self.id,
             'customerId': self.customerId,
@@ -62,11 +71,13 @@ class Order(db.Model):
         }
 
     def deserialize(self, data):
+        ''' Update order data from a dictionary '''
         self.customerId = data['customerId']
         self.createdAt = data['createdAt']
 
     @staticmethod
     def json_schema():
+        ''' JSON schema for order data '''
         return {
             "type": "object",
             "properties": {
@@ -78,6 +89,7 @@ class Order(db.Model):
 
 
 class ProductOrder(db.Model):
+    """ ProductOrder model """
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     orderId = db.Column(db.Integer, db.ForeignKey('order.id', ondelete="CASCADE"), nullable=False)
     productId = db.Column(db.Integer, db.ForeignKey('product.id', ondelete="SET NULL"))
@@ -87,6 +99,7 @@ class ProductOrder(db.Model):
     product = db.relationship('Product', back_populates="productOrder")
 
     def serialize(self):
+        ''' Return product order data as a dictionary '''
         return {
             'id': self.id,
             'orderId': self.orderId,
@@ -95,12 +108,14 @@ class ProductOrder(db.Model):
         }
 
     def deserialize(self, data):
+        ''' Update product order data from a dictionary '''
         self.orderId = data['orderId']
         self.productId = data['productId']
         self.quantity = data['quantity']
 
     @staticmethod
     def json_schema():
+        ''' JSON schema for product order data '''
         # Quantity must be a positive integer
         return {
             "type": "object",
@@ -114,6 +129,7 @@ class ProductOrder(db.Model):
 
 
 class Product(db.Model):
+    """ Product model """
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String(64), nullable=False)
     desc = db.Column(db.String(128), nullable=False)
@@ -123,6 +139,7 @@ class Product(db.Model):
     stock = db.relationship('Stock', cascade="all, delete-orphan", back_populates="stockProduct")
 
     def serialize(self):
+        ''' Return product data as a dictionary '''
         return {
             "name": self.name,
             "desc": self.desc,
@@ -130,12 +147,14 @@ class Product(db.Model):
         }
 
     def deserialize(self, data):
+        ''' Update product data from a dictionary '''
         self.name = data['name']
         self.desc = data['desc']
         self.price = data['price']
 
     @staticmethod
     def json_schema():
+        ''' JSON schema for product data '''
         return {
             "type": "object",
             "properties": {
@@ -148,6 +167,7 @@ class Product(db.Model):
 
 
 class Stock(db.Model):
+    """ Stock model """
     productId = db.Column(db.Integer, db.ForeignKey(
         'product.id', ondelete="CASCADE"), primary_key=True, nullable=False)
     quantity = db.Column(db.Integer)
@@ -155,17 +175,20 @@ class Stock(db.Model):
     stockProduct = db.relationship('Product', back_populates="stock")
 
     def serialize(self):
+        ''' Return stock data as a dictionary '''
         return {
             "productId": self.productId,
             "quantity": self.quantity
         }
 
     def deserialize(self, data):
+        ''' Update stock data from a dictionary '''
         self.productId = data.get('productId')
         self.quantity = data.get('quantity')
 
     @staticmethod
     def json_schema():
+        ''' JSON schema for stock data '''
         # Quantity must be a positive integer
         return {
             "type": "object",
@@ -180,4 +203,5 @@ class Stock(db.Model):
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
+    ''' Clear existing data and create new tables '''
     db.create_all()

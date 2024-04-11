@@ -1,3 +1,4 @@
+"""This module defines the resources for the Order and OrderCollection endpoints."""
 import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
@@ -12,9 +13,10 @@ from onlinestore.constants import *
 
 
 class OrderCollection(Resource):
+    """Resource OrderCollection"""
 
-    # Returns a list of orders in the database
     def get(self):
+        ''' Get list of all orders (returns a Mason document) '''
         body = InventoryBuilder()
 
         body.add_namespace("store", LINK_RELATIONS_URL)
@@ -33,6 +35,7 @@ class OrderCollection(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def post(self):
+        ''' Create a new order '''
         try:
             customerId = request.json["customerId"]
             if customerId is None:
@@ -66,7 +69,10 @@ class OrderCollection(Resource):
 
 
 class OrderItem(Resource):
+    """Resource OrderItem"""
+
     def get(self, order):
+        ''' Get order details '''
         body = InventoryBuilder(order.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
         body.add_control("self", href=url_for("api.orderitem", order=str(order.id)))
@@ -88,6 +94,7 @@ class OrderItem(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     def delete(self, order):
+        ''' Delete an order '''
         try:
             db.session.delete(order)
             db.session.commit()
@@ -97,6 +104,7 @@ class OrderItem(Resource):
             return "Customer not found", 404
 
     def put(self, order):
+        ''' Update an order '''
         if not request.json:
             return "Unsupported media type", 415
 
