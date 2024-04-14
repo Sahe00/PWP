@@ -1,7 +1,8 @@
 '''
 Utility methods for onlinestore API
 '''
-from flask import url_for
+import json
+from flask import Response, request, url_for
 from werkzeug.routing import BaseConverter
 from werkzeug.exceptions import NotFound
 
@@ -142,6 +143,7 @@ class InventoryBuilder(MasonBuilder):
     application. This class is not generic and contains application specific
     implementation details.
     """
+
     def add_control_all_products(self):
         ''' Add control to get all products '''
         self.add_control(
@@ -352,12 +354,21 @@ class InventoryBuilder(MasonBuilder):
         self.add_control_delete("Delete product stock", href=href)
 
 
+def create_error_response(status_code, title, message=None):
+    resource_url = request.path
+    body = MasonBuilder(resource_url=resource_url)
+    body.add_error(title, message)
+    body.add_control("profile", href=ERROR_PROFILE)
+    return Response(json.dumps(body), status_code, mimetype=MASON)
+
+
 class ProductConverter(BaseConverter):
     """
     A URL converter for Product objects. It converts between the Product object
     and the string representation of the product's name. The conversion is
     based on the product's name.
     """
+
     def to_python(self, product_name):  # used in routing
         ''' Convert product name to Product object '''
         db_product = Product.query.filter_by(name=product_name).first()
@@ -378,6 +389,7 @@ class CustomerConverter(BaseConverter):
     object and the string representation of the customer's UUID. The conversion
     is based on the customer's UUID.
     """
+
     def to_python(self, customer_uuid):  # used in routing
         ''' Convert customer UUID to Customer object '''
         db_customer = Customer.query.filter_by(uuid=customer_uuid).first()
@@ -396,6 +408,7 @@ class OrderConverter(BaseConverter):
     and the string representation of the order's ID. The conversion is based on
     the order's ID.
     """
+
     def to_python(self, order_id):  # used in routing
         ''' Convert order ID to Order object '''
         db_order = Order.query.filter_by(id=order_id).first()
@@ -414,6 +427,7 @@ class ProductOrderConverter(BaseConverter):
     object and the string representation of the product order's ID. The conversion
     is based on the product order's ID.
     """
+
     def to_python(self, productOrder_id):  # used in routing
         ''' Convert product order ID to ProductOrder object '''
         db_product_order = ProductOrder.query.filter_by(
@@ -433,6 +447,7 @@ class StockConverter(BaseConverter):
     and the string representation of the stock's product ID. The conversion is
     based on the stock's product ID.
     """
+
     def to_python(self, productId):  # used in routing
         ''' Convert product ID to Stock object '''
         db_stock = Stock.query.filter_by(productId=productId).first()
