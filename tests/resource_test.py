@@ -216,7 +216,7 @@ class TestCustomerCollection(object):
 
         # test with wrong content type
         resp = client.post(self.RESOURCE_URL, data="notjson")
-        assert resp.status_code in (400, 415)  # Bad request
+        assert resp.status_code in (400, 415)  # Request content type must be JSON
 
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid_json)
@@ -283,10 +283,11 @@ class TestCustomerItem(object):
         # Get url of first customer from the list
         CUSTOMER_URL = body["customers"][0]["@controls"]["self"]["href"]
 
-        # test with wrong content type
+        # Test with wrong content type
         resp = client.put(CUSTOMER_URL, data="notjson", headers=Headers({"Content-Type": "text"}))
         assert resp.status_code in (400, 415)
 
+        # Test with invalid customer URL
         resp = client.put(self.INVALID_URL, json=valid_json)
         assert resp.status_code == 404  # Not found
 
@@ -457,7 +458,7 @@ class TestOrderCollection(object):
         valid_json = _get_order_json()
 
         # test with wrong content type
-        resp = client.post(self.RESOURCE_URL, data="notjson")
+        resp = client.post(self.RESOURCE_URL, json="notjson")
         # Request content type must be JSON
         assert resp.status_code in (400, 415)
 
@@ -471,6 +472,13 @@ class TestOrderCollection(object):
             self.RESOURCE_URL + str(valid_json["customerId"]) + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
+
+        # Check if the customer exists
+        temp = valid_json["customerId"]
+        valid_json["customerId"] = -5  # Non-existing customerId
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+        valid_json["customerId"] = temp  # Reset customerId
 
         # remove required "createdAt" field and try to post again, error 400 expected
         valid_json.pop("createdAt")
@@ -520,6 +528,11 @@ class TestOrderItem(object):
         # Test with invalid order URL
         resp = client.put(self.INVALID_URL, json=valid_json)
         assert resp.status_code == 404  # Not found
+        
+        # remove "createdAt" field for 400
+        valid_json.pop("createdAt")
+        resp = client.put(ORDER_URL, json=valid_json)
+        assert resp.status_code == 400
 
     def test_delete(self, client):
         resp = client.get(self.ALL_ORDERS_URL)
