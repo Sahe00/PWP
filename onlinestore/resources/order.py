@@ -3,13 +3,13 @@ import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
-from jsonschema import ValidationError, draft7_format_checker, validate
+from jsonschema import ValidationError, validate
 from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Order, Customer
-from onlinestore.utils import InventoryBuilder
+from onlinestore.utils import InventoryBuilder, create_error_response
 from onlinestore.constants import *
 
 
@@ -40,17 +40,24 @@ class OrderCollection(Resource):
     def post(self):
         ''' Create a new order '''
         if not request.json:
-            return "Unsupported media type", 415
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         # Validate the JSON document against the schema
         try:
             validate(request.json, Order.json_schema())
         except ValidationError as e:
-            raise BadRequest(description=str(e))  # 400 Bad request
+            return create_error_response(400, "Invalid JSON document", str(e))
 
+        # Check if the customer exists
         customerId = request.json["customerId"]
         if db.session.query(Customer).filter(Customer.id == customerId).first() is None:
-            return f"Customer with ID {customerId} not found", 404
+            return create_error_response(
+                404, "Not found",
+                "Customer with id '{}' not found.".format(customerId)
+            )
 
         order = Order()
         order.deserialize(request.json)
@@ -58,8 +65,11 @@ class OrderCollection(Resource):
         try:
             db.session.add(order)
             db.session.commit()
-        except Exception as e:  # IntegrityError
-            return f"Incomplete request - missing fields - {e}", 500
+        except IntegrityError:
+            return create_error_response(
+                409, "Already exists",
+                "Order with id '{}' already exists.".format(order.id)
+            )
 
         order_uri = url_for("api.orderitem", order=order.id)
         return Response(status=201, headers={"Location": order_uri})
@@ -91,36 +101,36 @@ class OrderItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    @swag_from('../../doc/order/order_item_delete.yml')
-    def delete(self, order):
-        ''' Delete an order '''
-        try:
-            db.session.delete(order)
-            db.session.commit()
-
-            return Response(status=204)
-        except IntegrityError:
-            return "Order not found", 404
-
     @swag_from('../../doc/order/order_item_put.yml')
     def put(self, order):
         ''' Update an order '''
         if not request.json:
-            return "Unsupported media type", 415
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         try:
             validate(request.json, Order.json_schema())
         except ValidationError as e:
-            raise BadRequest(description=str(e))
+            return create_error_response(400, "Invalid JSON document", str(e))
 
         try:
             order.deserialize(request.json)
             db.session.add(order)
-            try:
-                db.session.commit()
-            except IntegrityError:
-                return "Database error", 500
-
-            return Response(status=204)
+            db.session.commit()
         except IntegrityError:
-            return "Order not found", 404
+            return create_error_response(
+                409, "Already exists",
+                "Order with id '{}' already exists.".format(order.id)
+            )
+
+        return Response(status=204)
+
+    @swag_from('../../doc/order/order_item_delete.yml')
+    def delete(self, order):
+        ''' Delete an order '''
+        db.session.delete(order)
+        db.session.commit()
+
+        return Response(status=204)

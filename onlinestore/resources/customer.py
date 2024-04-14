@@ -9,7 +9,7 @@ from werkzeug.exceptions import BadRequest
 from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Customer
-from onlinestore.utils import InventoryBuilder
+from onlinestore.utils import InventoryBuilder, create_error_response
 from onlinestore.constants import *
 
 
@@ -40,17 +40,23 @@ class CustomerCollection(Resource):
     def post(self):
         ''' Create a new customer '''
         if not request.json:
-            return "Unsupported media type", 415
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         # Validate the JSON document against the schema
         try:
             validate(request.json, Customer.json_schema())
         except ValidationError as e:
-            raise BadRequest(description=str(e))  # 400 Bad request
+            return create_error_response(400, "Invalid JSON document", str(e))
 
         email = request.json["email"]
         if db.session.query(Customer).filter(Customer.email == email).first():
-            return "Customer with this email already exists", 409
+            return create_error_response(
+                409, "Already exists",
+                "Customer with email '{}' already exists.".format(email)
+            )
 
         customer = Customer()
         customer.deserialize(request.json)
@@ -58,8 +64,11 @@ class CustomerCollection(Resource):
         try:
             db.session.add(customer)
             db.session.commit()
-        except Exception as e:  # IntegrityError
-            return f"Incomplete request - missing fields - {e}", 500
+        except IntegrityError:
+            return create_error_response(
+                409, "Already exists",
+                "Customer with email '{}' already exists.".format(email)
+            )
 
         return Response(status=201, headers={
             "Location": url_for("api.customeritem", customer=customer.uuid)
@@ -94,26 +103,32 @@ class CustomerItem(Resource):
     def put(self, customer):
         ''' Update a customer in the database '''
         if not request.json:
-            return "Unsupported media type", 415
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         try:
             validate(request.json, Customer.json_schema())
         except ValidationError as e:
-            raise BadRequest(description=str(e))  # 400 Bad request
+            return create_error_response(400, "Invalid JSON document", str(e))
 
         # Check if customer email already exists
         email = request.json["email"]
         email_exists = db.session.query(Customer).filter(Customer.email == email).first()
         # If email is not the same as customers current email, check that it is unique
         if customer.email != email and email_exists:
-            return "Customer with this email already exists", 409
+            return create_error_response(
+                409, "Already exists",
+                "Customer with email '{}' already exists.".format(email)
+            )
 
         try:
             customer.deserialize(request.json)
             db.session.add(customer)
             db.session.commit()
         except IntegrityError:
-            return "Database error", 500
+            return create_error_response(500, "Database error")
 
         return Response(status=204)
 
