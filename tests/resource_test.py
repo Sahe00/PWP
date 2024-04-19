@@ -190,6 +190,18 @@ def _get_order_json():
     return order
 
 
+def _get_productorder_json():
+    """
+    Creates a valid product order JSON object to be used for PUT and POST tests.
+    """
+    productorder = {
+        "orderId": 1,
+        "productId": 1,
+        "quantity": 1
+    }
+    return productorder
+
+
 class TestCustomerCollection(object):
     """
     Tests for the CustomerCollection resource.
@@ -458,7 +470,7 @@ class TestOrderCollection(object):
         valid_json = _get_order_json()
 
         # test with wrong content type
-        resp = client.post(self.RESOURCE_URL, json="notjson")
+        resp = client.post(self.RESOURCE_URL, data="notjson")
         # Request content type must be JSON
         assert resp.status_code in (400, 415)
 
@@ -528,7 +540,7 @@ class TestOrderItem(object):
         # Test with invalid order URL
         resp = client.put(self.INVALID_URL, json=valid_json)
         assert resp.status_code == 404  # Not found
-        
+
         # remove "createdAt" field for 400
         valid_json.pop("createdAt")
         resp = client.put(ORDER_URL, json=valid_json)
@@ -548,3 +560,52 @@ class TestOrderItem(object):
         assert resp.status_code == 404
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404
+
+
+class TestProductOrderCollection(object):
+    """
+    Tests for the ProductOrderCollection resource.
+    """
+
+    RESOURCE_URL = "/api/productorders/"
+
+    def test_get(self, client):
+        ''' Test GET method for the ProductOrderCollection resource. '''
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        valid_json = _get_productorder_json()
+        _check_control_post_method("productorder:add-productorder", client, body, valid_json)
+        assert len(body["productorders"]) == 2  # Two product orders in the database
+        for item in body["productorders"]:
+            _check_control_get_method("self", client, item)
+            _check_control_get_method("profile", client, item)
+
+    def test_post(self, client):
+        ''' Test POST method for the ProductOrderCollection resource. '''
+        valid_json = _get_productorder_json()
+
+        # test with wrong content type
+        resp = client.post(self.RESOURCE_URL, data="notjson")
+        # Request content type must be JSON
+        assert resp.status_code in (400, 415)
+
+        # test with valid and see that it exists afterward
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 201
+
+        resp = client.get(resp.headers["Location"])
+        assert resp.status_code == 200
+
+        # Check if the product order exists
+        temp = valid_json["orderId"]
+        valid_json["orderId"] = -5  # Non-existing orderId
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+        valid_json["orderId"] = temp  # Reset orderId
+
+        # remove required "quantity" field and try to post again, error 400 expected
+        valid_json.pop("quantity")
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 400  # Invalid request body
