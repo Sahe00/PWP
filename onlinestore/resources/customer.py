@@ -51,6 +51,7 @@ class CustomerCollection(Resource):
         except ValidationError as e:
             return create_error_response(400, "Invalid JSON document", str(e))
 
+        # Check if customer email already exists
         email = request.json["email"]
         if db.session.query(Customer).filter(Customer.email == email).first():
             return create_error_response(

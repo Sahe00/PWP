@@ -202,6 +202,17 @@ def _get_productorder_json():
     return productorder
 
 
+def _get_stock_json():
+    """
+    Creates a valid stock JSON object to be used for PUT and POST tests.
+    """
+    stock = {
+        "productId": 1,
+        "quantity": 5
+    }
+    return stock
+
+
 class TestCustomerCollection(object):
     """
     Tests for the CustomerCollection resource.
@@ -429,6 +440,11 @@ class TestProductItem(object):
         resp = client.put(self.INVALID_URL, json=valid_json)
         assert resp.status_code == 404  # Not found
 
+        # Remove "name" field for 400
+        valid_json.pop("name")
+        resp = client.put(PRODUCT_URL, json=valid_json)
+        assert resp.status_code == 400
+
     def test_delete(self, client):
         resp = client.get(self.ALL_PRODUCTS_URL)
         assert resp.status_code == 200
@@ -602,10 +618,187 @@ class TestProductOrderCollection(object):
         temp = valid_json["orderId"]
         valid_json["orderId"] = -5  # Non-existing orderId
         resp = client.post(self.RESOURCE_URL, json=valid_json)
-        assert resp.status_code == 404  # Not found
+        assert resp.status_code == 404  # Order not found
         valid_json["orderId"] = temp  # Reset orderId
+
+        temp = valid_json["productId"]
+        valid_json["productId"] = -5  # Non-existing productId
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 404  # Product not found
+        valid_json["productId"] = temp  # Reset productId
 
         # remove required "quantity" field and try to post again, error 400 expected
         valid_json.pop("quantity")
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 400  # Invalid request body
+
+
+class TestProductOrderItem(object):
+
+    ALL_PRODUCTORDERS_URL = "/api/productorders/"
+    INVALID_URL = "/api/productorders/non-productorder-x/"
+
+    def test_get(self, client):
+        resp = client.get(self.ALL_PRODUCTORDERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first product order from the list
+        PRODUCTORDER_URL = body["productorders"][0]["@controls"]["self"]["href"]
+        resp = client.get(PRODUCTORDER_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        _check_control_get_method("self", client, body)
+        _check_control_get_method("profile", client, body)
+        _check_control_get_method("collection", client, body)
+        valid_json = _get_productorder_json()
+        _check_control_put_method("edit", client, body, valid_json)
+        _check_control_delete_method("delete", client, body)
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
+
+    def test_put(self, client):
+        valid_json = _get_productorder_json()
+
+        resp = client.get(self.ALL_PRODUCTORDERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first product order from the list
+        PRODUCTORDER_URL = body["productorders"][0]["@controls"]["self"]["href"]
+
+        # Test with wrong content type
+        resp = client.put(PRODUCTORDER_URL, data="notjson",
+                          headers=Headers({"Content-Type": "text"}))
+        assert resp.status_code in (400, 415)
+
+        # Test with invalid product order URL
+        resp = client.put(self.INVALID_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+
+        # remove "quantity" field for 400
+        valid_json.pop("quantity")
+        resp = client.put(PRODUCTORDER_URL, json=valid_json)
+        assert resp.status_code == 400
+
+    def test_delete(self, client):
+        resp = client.get(self.ALL_PRODUCTORDERS_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first product order from the list
+        PRODUCTORDER_URL = body["productorders"][0]["@controls"]["self"]["href"]
+
+        resp = client.delete(PRODUCTORDER_URL)
+        assert resp.status_code == 204
+        resp = client.delete(PRODUCTORDER_URL)
+        assert resp.status_code == 404
+        resp = client.delete(self.INVALID_URL)
+        assert resp.status_code == 404
+
+
+class TestStockCollection(object):
+    """
+    Tests for the StockCollection resource.
+    """
+
+    RESOURCE_URL = "/api/stock/"
+
+    def test_get(self, client):
+        ''' Test GET method for the StockCollection resource. '''
+        resp = client.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+
+        # Two stock items in the database
+        assert len(body["items"]) == 2
+        for item in body["items"]:
+            _check_control_get_method("self", client, item)
+            _check_control_get_method("profile", client, item)
+
+
+class TestStockItem(object):
+
+    ALL_STOCK_URL = "/api/stock/"
+    INVALID_URL = "/api/stock/non-stock-x/"
+
+    def test_get(self, client):
+        ''' Test GET method for the StockItem resource. '''
+        resp = client.get(self.ALL_STOCK_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first stock item from the list
+        STOCK_URL = body["items"][0]["@controls"]["self"]["href"]
+        resp = client.get(STOCK_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        _check_namespace(client, body)
+        _check_control_get_method("self", client, body)
+        _check_control_get_method("profile", client, body)
+        _check_control_get_method("collection", client, body)
+
+        # Insert productId of the body to the valid_json because it needs to be the same
+        valid_json = _get_stock_json()
+        valid_json["productId"] = body["productId"]
+        _check_control_put_method("edit", client, body, valid_json)
+        _check_control_delete_method("delete", client, body)
+        resp = client.get(self.INVALID_URL)
+        assert resp.status_code == 404
+
+    def test_put(self, client):
+        ''' Test PUT method for the StockItem resource. '''
+        valid_json = _get_stock_json()
+
+        resp = client.get(self.ALL_STOCK_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first stock item from the list
+        STOCK_URL = body["items"][0]["@controls"]["self"]["href"]
+
+        # Test with wrong content type
+        resp = client.put(STOCK_URL, data="notjson",
+                          headers=Headers({"Content-Type": "text"}))
+        assert resp.status_code in (400, 415)
+
+        # Test with invalid stock URL
+        resp = client.put(self.INVALID_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+
+        # TODO: Check if the product exists
+        # temp = valid_json["productId"]
+        # valid_json["productId"] = -5  # Non-existing productId
+        # resp = client.put(STOCK_URL, json=valid_json)
+        # assert resp.status_code == 404  # Not found
+        # valid_json["productId"] = temp  # Reset productId
+
+        # Edit productId of request json to be different from the body
+        temp = valid_json["productId"]
+        valid_json["productId"] = body["items"][0]["productId"] + 1
+        resp = client.put(STOCK_URL, json=valid_json)
+        assert resp.status_code == 400  # Product ID cannot be modified
+        valid_json["productId"] = temp  # Reset productId
+
+        # remove required "quantity" field for 400
+        valid_json.pop("quantity")
+        resp = client.put(STOCK_URL, json=valid_json)
+        assert resp.status_code == 400
+
+    def test_delete(self, client):
+        ''' Test DELETE method for the StockItem resource. '''
+        resp = client.get(self.ALL_STOCK_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first stock item from the list
+        STOCK_URL = body["items"][0]["@controls"]["self"]["href"]
+
+        resp = client.delete(STOCK_URL)
+        assert resp.status_code == 204
+        resp = client.delete(STOCK_URL)
+        assert resp.status_code == 404
+        resp = client.delete(self.INVALID_URL)
+        assert resp.status_code == 404

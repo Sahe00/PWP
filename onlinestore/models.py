@@ -196,7 +196,7 @@ class Stock(db.Model):
                 "productId": {"type": "integer"},
                 "quantity": {"type": "integer", "minimum": 0}
             },
-            "required": ["productId","quantity"]
+            "required": ["productId", "quantity"]
         }
 
 

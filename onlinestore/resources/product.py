@@ -3,13 +3,13 @@ import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
-from jsonschema import ValidationError, draft7_format_checker, validate
+from jsonschema import ValidationError, validate
 from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Product
-from onlinestore.utils import InventoryBuilder
+from onlinestore.utils import InventoryBuilder, create_error_response
 from onlinestore.constants import *
 
 
@@ -42,14 +42,18 @@ class ProductCollection(Resource):
         ''' Create a new product '''
         if not request.json:
             return "Unsupported media type", 415
+
         try:
             validate(request.json, Product.json_schema())
         except ValidationError as e:
-            raise BadRequest(description=str(e))  # 400 Bad request
+            return create_error_response(400, "Invalid JSON document", str(e))
 
         name = request.json["name"]
         if db.session.query(Product).filter(Product.name == name).first():
-            return "Product already exists", 409
+            return create_error_response(
+                409, "Already exists",
+                f"Product with name '{name}' already exists."
+            )
 
         product = Product()
         product.deserialize(request.json)
@@ -58,7 +62,7 @@ class ProductCollection(Resource):
             db.session.add(product)
             db.session.commit()
         except Exception as e:  # IntegrityError
-            return f"Incomplete request - missing fields - {e}", 500
+            return create_error_response(500, "Database error", str(e))
 
         return Response(status=201, headers={
             "Location": url_for("api.productitem", name=product.name)
@@ -92,27 +96,21 @@ class ProductItem(Resource):
         try:
             validate(request.json, Product.json_schema())
         except ValidationError as e:
-            raise BadRequest(description=str(e))
+            return create_error_response(400, "Invalid JSON document", str(e))
 
         try:
             name.deserialize(request.json)
             db.session.add(name)
-            try:
-                db.session.commit()
-            except IntegrityError:
-                return "Database error", 500
-
-            return Response(status=204)
+            db.session.commit()
         except IntegrityError:
             return "Product not found", 404
+
+        return Response(status=204)
 
     @swag_from('../../doc/product/product_item_delete.yml')
     def delete(self, name):
         ''' Delete a product '''
-        try:
-            db.session.delete(name)
-            db.session.commit()
+        db.session.delete(name)
+        db.session.commit()
 
-            return Response(status=204)
-        except IntegrityError:
-            return "Product not found", 404
+        return Response(status=204)

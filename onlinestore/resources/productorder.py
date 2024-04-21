@@ -6,13 +6,13 @@ import json
 from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
-from jsonschema import ValidationError, draft7_format_checker, validate
+from jsonschema import ValidationError, validate
 from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import ProductOrder, Order, Product
-from onlinestore.utils import InventoryBuilder
+from onlinestore.utils import InventoryBuilder, create_error_response
 from onlinestore.constants import *
 
 
@@ -33,7 +33,8 @@ class ProductOrderCollection(Resource):
         # List all product orders in the database
         for productorder in ProductOrder.query.all():
             item = InventoryBuilder(productorder.serialize())
-            item.add_control("self", href=url_for("api.productorderitem", productorder=productorder.id))
+            item.add_control("self", href=url_for(
+                "api.productorderitem", productorder=productorder.id))
             item.add_control("profile", PRODUCTORDER_PROFILE)
             body["productorders"].append(item)
 
@@ -42,40 +43,33 @@ class ProductOrderCollection(Resource):
     @swag_from('../../doc/productorder/productorder_collection_post.yml')
     def post(self):
         ''' Create a new product order '''
+        orderId = request.json["orderId"]
+        productId = request.json["productId"]
+        if orderId is None or productId is None:
+            return "Request content type must be JSON", 415
+
+        # Validate the JSON document against the schema
         try:
-            orderId = request.json["orderId"]
-            productId = request.json["productId"]
-            if orderId is None or productId is None:
-                return "Request content type must be JSON", 415
+            validate(request.json, ProductOrder.json_schema())
+        except ValidationError as e:
+            return create_error_response(400, "Invalid JSON document", str(e))
 
-            # Validate the JSON document against the schema
-            try:
-                validate(request.json, ProductOrder.json_schema(),
-                         format_checker=draft7_format_checker)
-            except ValidationError as e:
-                raise BadRequest(description=str(e))  # 400 Bad request
+        if db.session.query(Order).filter(Order.id == orderId).first() is None:
+            return f"Order with ID {orderId} not found", 404
+        if db.session.query(Product).filter(Product.id == productId).first() is None:
+            return f"Product with ID {productId} not found", 404
 
-            if db.session.query(Order).filter(Order.id == orderId).first() is None:
-                return f"Order with ID {orderId} not found", 404
-            if db.session.query(Product).filter(Product.id == productId).first() is None:
-                return f"Product with ID {productId} not found", 404
-            try:
-                productOrder = ProductOrder()
-                productOrder.deserialize(request.json)
-            except ValueError:
-                return "Invalid request body", 400
-            try:
-                db.session.add(productOrder)
-                db.session.commit()
+        productOrder = ProductOrder()
+        productOrder.deserialize(request.json)
 
-                productOrder_uri = url_for("api.productordercollection", id=productOrder.id)
+        try:
+            db.session.add(productOrder)
+            db.session.commit()
+        except IntegrityError:
+            return create_error_response(500, "Integrity error", "Database error")
 
-                return Response(status=201, headers={"Location": productOrder_uri})
-            except Exception as e:  # IntegrityError:
-                db.session.rollback()
-                return f"Incomplete request - missing fields - {e}", 500
-        except (KeyError, ValueError):
-            return "Invalid request body", 400
+        productOrder_uri = url_for("api.productordercollection", id=productOrder.id)
+        return Response(status=201, headers={"Location": productOrder_uri})
 
 
 class ProductOrderItem(Resource):
@@ -98,17 +92,6 @@ class ProductOrderItem(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    @swag_from('../../doc/productorder/productorder_item_delete.yml')
-    def delete(self, productorder):
-        ''' Delete a product order '''
-        try:
-            db.session.delete(productorder)
-            db.session.commit()
-
-            return Response(status=204)
-        except IntegrityError:
-            return "Customer not found", 404
-
     @swag_from('../../doc/productorder/productorder_item_put.yml')
     def put(self, productorder):
         ''' Update a product order '''
@@ -123,11 +106,16 @@ class ProductOrderItem(Resource):
         try:
             productorder.deserialize(request.json)
             db.session.add(productorder)
-            try:
-                db.session.commit()
-            except IntegrityError:
-                return "Database error", 500
-
-            return Response(status=204)
+            db.session.commit()
         except IntegrityError:
-            return "Customer not found", 404
+            return create_error_response(404, "Not found", "Customer not found for product order")
+
+        return Response(status=204)
+
+    @swag_from('../../doc/productorder/productorder_item_delete.yml')
+    def delete(self, productorder):
+        ''' Delete a product order '''
+        db.session.delete(productorder)
+        db.session.commit()
+
+        return Response(status=204)
