@@ -21,11 +21,11 @@ responses:
               href: /profiles/product/
             collection:
               href: /api/product/
-            product:get-productorder:
+            store:get-productorder:
               method: GET
               title: Get product order for the product
               href: /api/productorder/1/
-            product:stock-by-product:
+            store:stock-by-product:
               method: GET
               title: Get stock for the product
               href: /api/stock/1/

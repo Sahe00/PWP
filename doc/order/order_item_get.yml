@@ -21,7 +21,7 @@ responses:
               href: /profiles/order/
             collection:
               href: /api/orders/
-            order:by-customer:
+            store:by-customer:
               method: GET
               title: Get customer to order
               href: /api/customers/b42f07ef-0e88-495e-a84e-dbdfee0483a7/

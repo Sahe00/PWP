@@ -14,7 +14,7 @@ responses:
           "@controls":
             self:
               href: /api/stock/
-            stock:get-stocks:
+            store:get-stocks:
               method: GET
               title: Get all stocks
               href: /api/stock/

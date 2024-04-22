@@ -1,29 +1,29 @@
 ---
 tags:
   - Productorder
-description: Create a new product
+description: Create a new product order
 requestBody:
   content:
     application/json:
       schema:
         type: object
         properties:
-          name:
-            type: string
-          desc:
-            type: string
-          price:
-            type: number
+          orderId:
+            type: integer
+          productId:
+            type: integer
+          quantity:
+            type: integer
         required:
-          - name
-          - desc
-          - price
+          - orderId
+          - productId
+          - quantity
 responses:
   '201':
-    description: Product created successfully
+    description: Productorder created successfully
   '400':
     description: Invalid request body
-  '409':
-    description: Product already exists
+  '404':
+    description: Order or product not found
   '415':
     description: Request body must be JSON

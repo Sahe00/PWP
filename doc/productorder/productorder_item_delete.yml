@@ -1,9 +1,9 @@
 ---
 tags:
   - Productorder
-description: Delete a product
+description: Delete a product order
 responses:
   '204':
-    description: Product deleted successfully
+    description: Productorder deleted successfully
   '404':
-    description: Product not found
+    description: Productorder not found

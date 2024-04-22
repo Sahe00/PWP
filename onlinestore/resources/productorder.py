@@ -108,7 +108,7 @@ class ProductOrderItem(Resource):
             db.session.add(productorder)
             db.session.commit()
         except IntegrityError:
-            return create_error_response(404, "Not found", "Customer not found for product order")
+            return create_error_response(404, "Not found", "Productorder not found")
 
         return Response(status=204)
 

@@ -1,27 +1,29 @@
 ---
 tags:
   - Productorder
-description: Update a product
+description: Update a productorder
 requestBody:
   content:
     application/json:
       schema:
         type: object
         properties:
-          name:
-            type: string
-          desc:
-            type: string
-          price:
-            type: number
+          orderId:
+            type: integer
+          productId:
+            type: integer
+          quantity:
+            type: integer
         required:
-          - name
-          - desc
-          - price
+          - orderId
+          - productId
+          - quantity
 responses:
   '204':
-    description: Product updated successfully
+    description: Productorder updated successfully
   '400':
     description: Invalid request body
+  '404':
+    description: Productorder not found
   '415':
     description: Unsupported media type

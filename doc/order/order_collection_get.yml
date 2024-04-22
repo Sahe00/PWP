@@ -13,11 +13,11 @@ responses:
           "@controls":
             self:
               href: /api/orders/
-            order:get-orders:
+            store:get-orders:
               method: GET
               title: Get all orders
               href: /api/products/
-            order:add-orders:
+            store:add-orders:
               method: POST
               encoding: application/json
               title: Add a new order

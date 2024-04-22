@@ -20,7 +20,7 @@ responses:
               href: /profiles/stock/
             collection:
               href: /api/stock/
-            stock:get-product:
+            store:get-product:
               method: GET
               title: Get product for the stock
               href: /api/products/Sateenvarjo/

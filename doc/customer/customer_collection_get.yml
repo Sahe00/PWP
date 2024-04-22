@@ -14,11 +14,11 @@ responses:
           "@controls":
             self:
               href: /api/customers/
-            customer:get-customers:
+            store:get-customers:
               method: GET
               title: Get all customers
               href: /api/customers/
-            customer:add-customer:
+            store:add-customer:
               method: POST
               encoding: application/json
               title: Add a new customer

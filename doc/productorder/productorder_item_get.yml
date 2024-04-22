@@ -1,53 +1,54 @@
 ---
 tags:
   - Productorder
-description: Get a product
+description: Get a product order
 responses:
   '200':
-    description: Product information
+    description: Productorder information
     content:
       application/json:
         example:
-        - name: Sateenvarjo
-          desc: Sateenvarjo suojaa sinua sateelta kuin sateelta!
-          price: 20.0
+        - id: 1
+          orderId: 1
+          productId: 1
+          quantity: 2
           "@namespaces":
             store:
               name: /onlinestore/link-relations/
           "@controls":
             self:
-              href: /api/products/Sateenvarjo/
+              href: /api/productorders/1/
             profile:
-              href: /profiles/product/
+              href: /profiles/productorder/
             collection:
-              href: /api/product/
-            product:get-productorder:
+              href: /api/productorders/
+            store:get-order:
               method: GET
-              title: Get product order for the product
-              href: /api/productorder/1/
-            product:stock-by-product:
+              title: Get product order for the productorder
+              href: /api/order/1/
+            store:get-product:
               method: GET
-              title: Get stock for the product
-              href: /api/stock/1/
+              title: Get product for the productorder
+              href: /api/products/1/
             edit:
               method: PUT
               encoding: application/json
-              title: Edit a product
+              title: Edit a product order
               schema:
                 type: object
                 properties:
-                  name:
-                    type: string
-                  desc:
-                    type: string
-                  price:
-                    type: number
+                  orderId:
+                    type: integer
+                  productId:
+                    type: integer
+                  quantity:
+                    type: integer
                 required:
-                  - name
-                  - desc
-                  - price
-              href: /api/products/Sateenvarjo/
+                  - orderId
+                  - productId
+                  - quantity
+              href: /api/productorders/1/
             delete:
               method: DELETE
-              title: Delete a product
-              href: /api/customers/Sateenvarjo/
+              title: Delete a product order
+              href: /api/productorders/1/

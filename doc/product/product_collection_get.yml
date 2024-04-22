@@ -14,11 +14,11 @@ responses:
           "@controls":
             self:
               href: /api/products/
-            products:get-products:
+            store:get-products:
               method: GET
               title: Get all products
               href: /api/products/
-            products:add-products:
+            store:add-products:
               method: POST
               encoding: application/json
               title: Add a new product
