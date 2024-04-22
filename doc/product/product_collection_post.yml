@@ -27,5 +27,3 @@ responses:
     description: Product already exists
   '415':
     description: Request body must be JSON
-  '500':
-    description: Incomplete request - missing fields

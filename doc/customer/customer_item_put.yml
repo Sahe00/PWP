@@ -29,5 +29,3 @@ responses:
     description: Customer with the same email already exists
   '415':
     description: Unsupported media type
-  '500':
-    description: Database error

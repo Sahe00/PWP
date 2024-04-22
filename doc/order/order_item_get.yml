@@ -11,10 +11,10 @@ responses:
           id: 1
           customerId: 1
           createdAt: 2024-02-27 16:44:47
-          namespaces:
+          "@namespaces":
             store:
               name: /onlinestore/link-relations/
-          controls:
+          "@controls":
             self:
               href: /api/orders/1/
             profile:
@@ -48,7 +48,7 @@ responses:
               orderId: 1
               productId: 1
               quantity: 2
-              controls:
+              "@controls":
                 self:
                   href: /api/productorders/1/
                 profile:
@@ -57,7 +57,7 @@ responses:
               orderId: 1
               productId: 2
               quantity: 1
-              controls:
+              "@controls":
                 self:
                   href: /api/productorders/2/
                 profile:

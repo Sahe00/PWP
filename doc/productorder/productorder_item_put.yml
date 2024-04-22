@@ -25,5 +25,3 @@ responses:
     description: Invalid request body
   '415':
     description: Unsupported media type
-  '500':
-    description: Database error

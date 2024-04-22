@@ -7,10 +7,10 @@ responses:
     content:
       application/json:
         example:
-          namespaces:
+          "@namespaces":
             store:
               name: /onlinestore/link-relations/
-          controls:
+          "@controls":
             self:
               href: /api/orders/
             order:get-orders:
@@ -36,7 +36,7 @@ responses:
             - id: 1
               customerId: 1
               createdAt: 2024-02-27 16:44:47
-              controls:
+              "@controls":
                 self:
                   href: /api/orders/1/
                 profile:
@@ -44,7 +44,7 @@ responses:
             - id: 2
               customerId: 1
               createdAt: 2024-03-01 12:30:00
-              controls:
+              "@controls":
                 self:
                   href: /api/orders/2/
                 profile:

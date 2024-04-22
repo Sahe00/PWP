@@ -8,10 +8,10 @@ responses:
     content:
       application/json:
         example:
-          namespaces:
+          "@namespaces":
             store:
               name: /onlinestore/link-relations/
-          controls:
+          "@controls":
             self:
               href: /api/stock/
             stock:get-stocks:
@@ -21,14 +21,14 @@ responses:
           items:
             - productId: 1
               quantity: 8
-              controls:
+              "@controls":
                 self:
                   href: /api/stock/1/
                 profile:
                   href: /profiles/stock/
             - productId: 2
               quantity: 21
-              controls:
+              "@controls":
                 self:
                   href: /api/stock/2/
                 profile:

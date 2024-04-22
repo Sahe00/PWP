@@ -13,10 +13,10 @@ responses:
           lastName: Heikkinen
           email: a.heikkinen@hotmail.com
           phone: "0452230667"
-          namespaces:
+          "@namespaces":
             store:
               name: /onlinestore/link-relations/
-          controls:
+          "@controls":
             self:
               href: /api/customers/b42f07ef-0e88-495e-a84e-dbdfee0483a7/
             profile:

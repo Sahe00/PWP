@@ -8,10 +8,10 @@ responses:
     content:
       application/json:
         example:
-          namespaces:
+          "@namespaces":
             store:
               name: /onlinestore/link-relations/
-          controls:
+          "@controls":
             self:
               href: /api/customers/
             customer:get-customers:
@@ -44,7 +44,7 @@ responses:
               lastName: Heikkinen
               email: a.heikkinen@hotmail.com
               phone: "0452230667"
-              controls:
+              "@controls":
                 self:
                   href: /api/customers/b42f07ef-0e88-495e-a84e-dbdfee0483a7/
                 profile:
@@ -54,7 +54,7 @@ responses:
               lastName: Virtanen
               email: vilutz22@gmail.com
               phone: "null"
-              controls:
+              "@controls":
                 self:
                   href: /api/customers/e6a27c66-8013-411b-bff9-27c481ff5687/
                 profile:

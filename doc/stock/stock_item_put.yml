@@ -22,5 +22,3 @@ responses:
     description: Product not found
   '415':
     description: Unsupported media type
-  '500':
-    description: Database error

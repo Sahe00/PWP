@@ -11,10 +11,10 @@ responses:
         - name: Sateenvarjo
           desc: Sateenvarjo suojaa sinua sateelta kuin sateelta!
           price: 20.0
-          namespaces:
+          "@namespaces":
             store:
               name: /onlinestore/link-relations/
-          controls:
+          "@controls":
             self:
               href: /api/products/Sateenvarjo/
             profile:

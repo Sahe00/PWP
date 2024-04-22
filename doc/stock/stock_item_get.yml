@@ -10,10 +10,10 @@ responses:
         example:
           productId: 1
           quantity: 8
-          namespaces:
+          "@namespaces":
             store:
               name: /onlinestore/link-relations/
-          controls:
+          "@controls":
             self:
               href: /api/stock/1/
             profile:
