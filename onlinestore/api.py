@@ -16,7 +16,7 @@ api = Api(api_bp)
 
 # Add resources
 api.add_resource(ProductCollection, '/products/', methods=['GET', 'POST'])
-api.add_resource(ProductItem, '/products/<product:name>/', methods=['GET', 'PUT', 'DELETE'])
+api.add_resource(ProductItem, '/products/<product:product>/', methods=['GET', 'PUT', 'DELETE'])
 
 api.add_resource(CustomerCollection, '/customers/', methods=['GET', 'POST'])
 api.add_resource(CustomerItem, '/customers/<customer:customer>/', methods=['GET', 'PUT', 'DELETE'])

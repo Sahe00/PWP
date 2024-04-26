@@ -31,7 +31,7 @@ class ProductCollection(Resource):
         # List all products in the database
         for product in Product.query.all():
             item = InventoryBuilder(product.serialize())
-            item.add_control("self", href=url_for("api.productitem", name=product.name))
+            item.add_control("self", href=url_for("api.productitem", product=product.name))
             item.add_control("profile", PRODUCT_PROFILE)
             body["products"].append(item)
 
@@ -73,22 +73,22 @@ class ProductItem(Resource):
     """ Resource ProductItem """
 
     @swag_from('../../doc/product/product_item_get.yml')
-    def get(self, name):
+    def get(self, product):
         ''' Get product information '''
-        body = InventoryBuilder(name.serialize())
+        body = InventoryBuilder(product.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
-        body.add_control("self", href=url_for("api.productitem", name=name.name))
+        body.add_control("self", href=url_for("api.productitem", product=product.name))
         body.add_control("profile", PRODUCT_PROFILE)
         body.add_control("collection", href=url_for("api.productcollection"))
-        body.add_control_get_productorder(name)  # GET product order for the product
-        body.add_control_get_stock(name)  # GET stock for the product
-        body.add_control_edit_product(name)  # PUT
-        body.add_control_delete_product(name)  # DELETE
+        body.add_control_get_productorder(product)  # GET product order for the product
+        body.add_control_get_stock(product)  # GET stock for the product
+        body.add_control_edit_product(product)  # PUT
+        body.add_control_delete_product(product)  # DELETE
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
     @swag_from('../../doc/product/product_item_put.yml')
-    def put(self, name):
+    def put(self, product):
         ''' Update product information '''
         if not request.json:
             return "Unsupported media type", 415
@@ -99,8 +99,8 @@ class ProductItem(Resource):
             return create_error_response(400, "Invalid JSON document", str(e))
 
         try:
-            name.deserialize(request.json)
-            db.session.add(name)
+            product.deserialize(request.json)
+            db.session.add(product)
             db.session.commit()
         except IntegrityError:
             return "Product not found", 404
@@ -108,9 +108,9 @@ class ProductItem(Resource):
         return Response(status=204)
 
     @swag_from('../../doc/product/product_item_delete.yml')
-    def delete(self, name):
+    def delete(self, product):
         ''' Delete a product '''
-        db.session.delete(name)
+        db.session.delete(product)
         db.session.commit()
 
         return Response(status=204)
