@@ -2,7 +2,7 @@
 tags:
   - Stock
 description: Create a new stock item
-requestbody:
+requestBody:
   content:
     application/json:
       schema:
@@ -21,6 +21,6 @@ responses:
   '400':
     description: Invalid request body
   '409':
-    description: Product already exists
+    description: Entry already exists / Product not found
   '415':
     description: Request body must be JSON

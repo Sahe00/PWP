@@ -28,5 +28,5 @@ api.add_resource(ProductOrderCollection, '/productorders/', methods=['GET', 'POS
 api.add_resource(ProductOrderItem, '/productorders/<productorder:productorder>/',
                  methods=['GET', 'PUT', 'DELETE'])
 
-api.add_resource(StockCollection, '/stock/', methods=['GET'])
+api.add_resource(StockCollection, '/stock/', methods=['GET', 'POST'])
 api.add_resource(StockItem, '/stock/<stock:product>/', methods=['GET', 'PUT', 'DELETE'])

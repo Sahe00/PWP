@@ -12,7 +12,7 @@ from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from
 from onlinestore import db
-from onlinestore.models import Stock
+from onlinestore.models import Stock, Product
 from onlinestore.utils import InventoryBuilder, create_error_response
 from onlinestore.constants import *
 
@@ -40,37 +40,40 @@ class StockCollection(Resource):
 
         return Response(json.dumps(body), 200, mimetype=MASON)
 
-    # @swag_from('../../doc/stock/stock_collection_post.yml')
-    # def post(self):
-    #    ''' Create a new stock item '''
-    #    if not request.json:
-    #        return create_error_response(
-    #            415, "Unsupported media type",
-    #            "Requests must be JSON"
-    #        )
-#
-    #    # Validate the JSON document against the schema
-    #    try:
-    #        validate(request.json, Stock.json_schema())
-    #    except ValidationError as e:
-    #        return create_error_response(400, "Invalid JSON document", str(e))
-#
-    #    # Check if the product already exists
-    #    productId = request.json["productId"]
-    #    if db.session.query(Stock).filter(Stock.productId == productId).first():
-    #        return "Product already exists", 409
-#
-    #    stock = Stock()
-    #    Stock.deserialize(request.json)
-#
-    #    try:
-    #        db.session.add(stock)
-    #        db.session.commit()
-    #    except IntegrityError:
-    #        return create_error_response(500, "Integrity error", "Could not add stock item")
-#
-    #    stock_uri = url_for("api.stockitem", productId=stock.productId)
-    #    return Response(status=201, headers={"Location": stock_uri})  # Created
+    @swag_from('../../doc/stock/stock_collection_post.yml')
+    def post(self):
+        ''' Create a new stock item '''
+        if not request.json:
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
+
+        # Validate the JSON document against the schema
+        try:
+            validate(request.json, Stock.json_schema())
+        except ValidationError as e:
+            return create_error_response(400, "Invalid JSON document", str(e))
+
+        # Check if the entry already exists
+        productId = request.json["productId"]
+        if db.session.query(Stock).filter(Stock.productId == productId).first():
+            return "Stock entry already exists", 409
+        # Check if the product exists
+        if db.session.query(Product).filter(Product.id == productId).first() is None:
+            return "Product not found", 409
+
+        stock = Stock()
+        stock.deserialize(request.json)
+
+        try:
+            db.session.add(stock)
+            db.session.commit()
+        except IntegrityError:
+            return create_error_response(500, "Integrity error", "Could not add stock item")
+
+        stock_uri = url_for("api.stockitem", product=stock.productId)
+        return Response(status=201, headers={"Location": stock_uri})  # Created
 
 
 class StockItem(Resource):

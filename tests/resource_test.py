@@ -50,23 +50,23 @@ def client():
         db.drop_all()  # drop all tables in the database
 
 
-def _populate_db():
-    ''' Populate the database with test data '''
-    for i in range(1, 4):
-        customer = Customer(
-            firstName=f"test-sensor-{i}",
-            lastName="testsensor",
-            email=f"testEmail-{i}",
-            phone=f"testPhone-{i}"
-        )
-        db.session.add(customer)
+# def _populate_db():
+#     ''' Populate the database with test data '''
+#     for i in range(1, 4):
+#         customer = Customer(
+#             firstName=f"test-sensor-{i}",
+#             lastName="testsensor",
+#             email=f"testEmail-{i}",
+#             phone=f"testPhone-{i}"
+#         )
+#         db.session.add(customer)
 
-    # db_key = ApiKey(
-    #    key=ApiKey.key_hash(TEST_KEY),
-    #    admin=True
-    # )
-    # db.session.add(db_key)
-    db.session.commit()
+#     # db_key = ApiKey(
+#     #    key=ApiKey.key_hash(TEST_KEY),
+#     #    admin=True
+#     # )
+#     # db.session.add(db_key)
+#     db.session.commit()
 
 
 def _check_namespace(client, response):
@@ -717,6 +717,52 @@ class TestStockCollection(object):
         for item in body["items"]:
             _check_control_get_method("self", client, item)
             _check_control_get_method("profile", client, item)
+
+    def test_post(self, client):
+        ''' Test POST method for the StockCollection resource. '''
+
+        valid_json = _get_stock_json()
+
+        # test with wrong content type
+        resp = client.post(self.RESOURCE_URL, data="notjson")
+        # Request content type must be JSON
+        assert resp.status_code in (400, 415)
+
+        # test with valid and see that it exists afterward
+        self._delete(client) # Delete the first stock item
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 201
+
+        resp = client.get(resp.headers["Location"])
+        assert resp.status_code == 200
+
+        # Ensure same product can have only 1 stock entry
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 409
+
+        # Check that product exists
+        temp = valid_json["productId"]
+        valid_json["productId"] = 999  # Non-existing productId
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 409  # Stock entry not found
+        valid_json["productId"] = temp  # Reset productId
+
+        # remove required "quantity" field and try to post again, error 400 expected
+        valid_json.pop("quantity")
+        resp = client.post(self.RESOURCE_URL, json=valid_json)
+        assert resp.status_code == 400  # Invalid request body
+
+    def _delete(self, client):
+        ''' Helper function to delete stock entry '''
+        resp = client.get("/api/stock/")
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+
+        # Get url of first stock item from the list
+        STOCK_URL = body["items"][0]["@controls"]["self"]["href"]
+
+        resp = client.delete(STOCK_URL)
+        assert resp.status_code == 204
 
 
 class TestStockItem(object):
