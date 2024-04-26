@@ -65,7 +65,7 @@ class ProductCollection(Resource):
             return create_error_response(500, "Database error", str(e))
 
         return Response(status=201, headers={
-            "Location": url_for("api.productitem", name=product.name)
+            "Location": url_for("api.productitem", product=product.name)
         })
 
 
