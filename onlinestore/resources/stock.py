@@ -4,11 +4,9 @@ The StockCollection resource handles GET and POST requests for the stock of prod
 The StockItem resource handles GET, PUT, and DELETE requests for a specific product's stock.
 """
 import json
-from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
 from jsonschema import ValidationError, validate
-from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from
 from onlinestore import db

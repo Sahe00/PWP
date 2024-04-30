@@ -3,11 +3,9 @@ This module defines the REST API for the ProductOrder resource. It handles
 GET, POST, PUT, and DELETE requests for the ProductOrder resource.
 """
 import json
-from sqlalchemy.exc import IntegrityError
 from flask import Response, request, url_for
 from flask_restful import Resource
 from jsonschema import ValidationError, validate
-from werkzeug.exceptions import BadRequest
 
 from flasgger import swag_from
 from onlinestore import db
@@ -111,7 +109,7 @@ class ProductOrderItem(Resource):
         try:
             validate(request.json, ProductOrder.json_schema())
         except ValidationError as e:
-            raise BadRequest(description=str(e))
+            return create_error_response(400, "Invalid JSON document", str(e))
 
         productorder.deserialize(request.json)
         db.session.add(productorder)
