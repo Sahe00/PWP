@@ -10,6 +10,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
+        'requests',
+        'pyside6',
         'flasgger',
         'flask',
         "flask-restful",
