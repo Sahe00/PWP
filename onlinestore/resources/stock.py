@@ -43,7 +43,7 @@ class StockCollection(Resource):
     @swag_from('../../doc/stock/stock_collection_post.yml')
     def post(self):
         ''' Create a new stock item '''
-        if not request.json:
+        if request.content_type != JSON:
             return create_error_response(
                 415, "Unsupported media type",
                 "Requests must be JSON"
@@ -58,10 +58,16 @@ class StockCollection(Resource):
         # Check if the entry already exists
         productId = request.json["productId"]
         if db.session.query(Stock).filter(Stock.productId == productId).first():
-            return "Stock entry already exists", 409
+            return create_error_response(
+                409, "Already exists",
+                f"Stock entry for product with ID '{productId}' already exists."
+            )
         # Check if the product exists
         if db.session.query(Product).filter(Product.id == productId).first() is None:
-            return "Product not found", 409
+            return create_error_response(
+                404, "Not found",
+                f"Product with ID '{productId}' not found."
+            )
 
         stock = Stock()
         stock.deserialize(request.json)
@@ -96,7 +102,7 @@ class StockItem(Resource):
     @swag_from('../../doc/stock/stock_item_put.yml')
     def put(self, product):
         ''' Update stock quantity for product '''
-        if not request.json:
+        if request.content_type != JSON:
             return create_error_response(
                 415, "Unsupported media type",
                 "Requests must be JSON"
@@ -129,7 +135,7 @@ class StockItem(Resource):
 
             return Response(status=204)
         except IntegrityError:
-            return "Product not found", 404
+            return create_error_response(404, "Not found", "Product not found")
 
     @swag_from('../../doc/stock/stock_item_delete.yml')
     def delete(self, product):

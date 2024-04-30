@@ -39,7 +39,7 @@ class OrderCollection(Resource):
     @swag_from('../../doc/order/order_collection_post.yml')
     def post(self):
         ''' Create a new order '''
-        if not request.json:
+        if request.content_type != JSON:
             return create_error_response(
                 415, "Unsupported media type",
                 "Requests must be JSON"
@@ -104,7 +104,7 @@ class OrderItem(Resource):
     @swag_from('../../doc/order/order_item_put.yml')
     def put(self, order):
         ''' Update an order '''
-        if not request.json:
+        if request.content_type != JSON:
             return create_error_response(
                 415, "Unsupported media type",
                 "Requests must be JSON"

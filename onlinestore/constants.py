@@ -1,3 +1,4 @@
+JSON = "application/json"
 MASON = "application/vnd.mason+json"
 LINK_RELATIONS_URL = "/onlinestore/link-relations/"
 

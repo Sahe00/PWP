@@ -43,10 +43,11 @@ class ProductOrderCollection(Resource):
     @swag_from('../../doc/productorder/productorder_collection_post.yml')
     def post(self):
         ''' Create a new product order '''
-        orderId = request.json["orderId"]
-        productId = request.json["productId"]
-        if orderId is None or productId is None:
-            return "Request content type must be JSON", 415
+        if request.content_type != JSON:
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         # Validate the JSON document against the schema
         try:
@@ -54,10 +55,19 @@ class ProductOrderCollection(Resource):
         except ValidationError as e:
             return create_error_response(400, "Invalid JSON document", str(e))
 
+        orderId = request.json["orderId"]
         if db.session.query(Order).filter(Order.id == orderId).first() is None:
-            return f"Order with ID {orderId} not found", 404
+            return create_error_response(
+                404, "Not found",
+                f"Order with ID {orderId} not found"
+            )
+
+        productId = request.json["productId"]
         if db.session.query(Product).filter(Product.id == productId).first() is None:
-            return f"Product with ID {productId} not found", 404
+            return create_error_response(
+                404, "Not found",
+                f"Product with ID {productId} not found"
+            )
 
         productOrder = ProductOrder()
         productOrder.deserialize(request.json)
@@ -95,8 +105,11 @@ class ProductOrderItem(Resource):
     @swag_from('../../doc/productorder/productorder_item_put.yml')
     def put(self, productorder):
         ''' Update a product order '''
-        if not request.json:
-            return "Unsupported media type", 415
+        if request.content_type != JSON:
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         try:
             validate(request.json, ProductOrder.json_schema())

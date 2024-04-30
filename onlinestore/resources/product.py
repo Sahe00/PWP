@@ -40,8 +40,11 @@ class ProductCollection(Resource):
     @swag_from('../../doc/product/product_collection_post.yml')
     def post(self):
         ''' Create a new product '''
-        if not request.json:
-            return "Unsupported media type", 415
+        if request.content_type != JSON:
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         try:
             validate(request.json, Product.json_schema())
@@ -90,8 +93,11 @@ class ProductItem(Resource):
     @swag_from('../../doc/product/product_item_put.yml')
     def put(self, product):
         ''' Update product information '''
-        if not request.json:
-            return "Unsupported media type", 415
+        if request.content_type != JSON:
+            return create_error_response(
+                415, "Unsupported media type",
+                "Requests must be JSON"
+            )
 
         try:
             validate(request.json, Product.json_schema())
@@ -103,7 +109,7 @@ class ProductItem(Resource):
             db.session.add(product)
             db.session.commit()
         except IntegrityError:
-            return "Product not found", 404
+            return create_error_response(404, "Not found", "Product not found")
 
         return Response(status=204)
 

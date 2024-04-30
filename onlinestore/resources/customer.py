@@ -39,7 +39,7 @@ class CustomerCollection(Resource):
     @swag_from('../../doc/customer/customer_collection_post.yml')
     def post(self):
         ''' Create a new customer '''
-        if not request.json:
+        if request.content_type != JSON:
             return create_error_response(
                 415, "Unsupported media type",
                 "Requests must be JSON"
@@ -103,7 +103,7 @@ class CustomerItem(Resource):
     @swag_from('../../doc/customer/customer_item_put.yml')
     def put(self, customer):
         ''' Update a customer in the database '''
-        if not request.json:
+        if request.content_type != JSON:
             return create_error_response(
                 415, "Unsupported media type",
                 "Requests must be JSON"
