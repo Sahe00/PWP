@@ -62,14 +62,8 @@ class OrderCollection(Resource):
         order = Order()
         order.deserialize(request.json)
 
-        try:
-            db.session.add(order)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(
-                409, "Already exists",
-                "Order with id '{}' already exists.".format(order.id)
-            )
+        db.session.add(order)
+        db.session.commit()
 
         order_uri = url_for("api.orderitem", order=order.id)
         return Response(status=201, headers={"Location": order_uri})
@@ -115,15 +109,9 @@ class OrderItem(Resource):
         except ValidationError as e:
             return create_error_response(400, "Invalid JSON document", str(e))
 
-        try:
-            order.deserialize(request.json)
-            db.session.add(order)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(
-                409, "Already exists",
-                "Order with id '{}' already exists.".format(order.id)
-            )
+        order.deserialize(request.json)
+        db.session.add(order)
+        db.session.commit()
 
         return Response(status=204)
 

@@ -62,14 +62,8 @@ class CustomerCollection(Resource):
         customer = Customer()
         customer.deserialize(request.json)
 
-        try:
-            db.session.add(customer)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(
-                409, "Already exists",
-                "Customer with email '{}' already exists.".format(email)
-            )
+        db.session.add(customer)
+        db.session.commit()
 
         return Response(status=201, headers={
             "Location": url_for("api.customeritem", customer=customer.uuid)
@@ -124,12 +118,9 @@ class CustomerItem(Resource):
                 "Customer with email '{}' already exists.".format(email)
             )
 
-        try:
-            customer.deserialize(request.json)
-            db.session.add(customer)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(500, "Database error")
+        customer.deserialize(request.json)
+        db.session.add(customer)
+        db.session.commit()
 
         return Response(status=204)
 

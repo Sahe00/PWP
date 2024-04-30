@@ -72,11 +72,8 @@ class StockCollection(Resource):
         stock = Stock()
         stock.deserialize(request.json)
 
-        try:
-            db.session.add(stock)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(500, "Integrity error", "Could not add stock item")
+        db.session.add(stock)
+        db.session.commit()
 
         stock_uri = url_for("api.stockitem", product=stock.productId)
         return Response(status=201, headers={"Location": stock_uri})  # Created
@@ -130,12 +127,9 @@ class StockItem(Resource):
                 "Product ID cannot be modified"
             )
 
-        try:
-            product.deserialize(request.json)
-            db.session.add(product)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(404, "Not found", "Product not found")
+        product.deserialize(request.json)
+        db.session.add(product)
+        db.session.commit()
 
         return Response(status=204)
 

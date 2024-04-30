@@ -61,11 +61,8 @@ class ProductCollection(Resource):
         product = Product()
         product.deserialize(request.json)
 
-        try:
-            db.session.add(product)
-            db.session.commit()
-        except Exception as e:  # IntegrityError
-            return create_error_response(500, "Database error", str(e))
+        db.session.add(product)
+        db.session.commit()
 
         return Response(status=201, headers={
             "Location": url_for("api.productitem", product=product.name)
@@ -104,12 +101,9 @@ class ProductItem(Resource):
         except ValidationError as e:
             return create_error_response(400, "Invalid JSON document", str(e))
 
-        try:
-            product.deserialize(request.json)
-            db.session.add(product)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(404, "Not found", "Product not found")
+        product.deserialize(request.json)
+        db.session.add(product)
+        db.session.commit()
 
         return Response(status=204)
 

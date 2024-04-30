@@ -72,11 +72,8 @@ class ProductOrderCollection(Resource):
         productOrder = ProductOrder()
         productOrder.deserialize(request.json)
 
-        try:
-            db.session.add(productOrder)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(500, "Integrity error", "Database error")
+        db.session.add(productOrder)
+        db.session.commit()
 
         productOrder_uri = url_for("api.productordercollection", id=productOrder.id)
         return Response(status=201, headers={"Location": productOrder_uri})
@@ -116,12 +113,9 @@ class ProductOrderItem(Resource):
         except ValidationError as e:
             raise BadRequest(description=str(e))
 
-        try:
-            productorder.deserialize(request.json)
-            db.session.add(productorder)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(404, "Not found", "Productorder not found")
+        productorder.deserialize(request.json)
+        db.session.add(productorder)
+        db.session.commit()
 
         return Response(status=204)
 
