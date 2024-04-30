@@ -744,7 +744,7 @@ class TestStockCollection(object):
         temp = valid_json["productId"]
         valid_json["productId"] = 999  # Non-existing productId
         resp = client.post(self.RESOURCE_URL, json=valid_json)
-        assert resp.status_code == 409  # Stock entry not found
+        assert resp.status_code == 404  # Stock entry not found
         valid_json["productId"] = temp  # Reset productId
 
         # remove required "quantity" field and try to post again, error 400 expected
