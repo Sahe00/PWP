@@ -729,7 +729,7 @@ class TestStockCollection(object):
         assert resp.status_code in (400, 415)
 
         # test with valid and see that it exists afterward
-        self._delete(client) # Delete the first stock item
+        self._delete(client)  # Delete the first stock item
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 201
 
@@ -754,7 +754,7 @@ class TestStockCollection(object):
 
     def _delete(self, client):
         ''' Helper function to delete stock entry '''
-        resp = client.get("/api/stock/")
+        resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
 
@@ -802,7 +802,7 @@ class TestStockItem(object):
         assert resp.status_code == 200
         body = json.loads(resp.data)
 
-        # Get url of first stock item from the list
+        # Get url of first stock item from the list -> /api/stock/1/
         STOCK_URL = body["items"][0]["@controls"]["self"]["href"]
 
         # Test with wrong content type
@@ -814,12 +814,12 @@ class TestStockItem(object):
         resp = client.put(self.INVALID_URL, json=valid_json)
         assert resp.status_code == 404  # Not found
 
-        # TODO: Check if the product exists
-        # temp = valid_json["productId"]
-        # valid_json["productId"] = -5  # Non-existing productId
-        # resp = client.put(STOCK_URL, json=valid_json)
-        # assert resp.status_code == 404  # Not found
-        # valid_json["productId"] = temp  # Reset productId
+        # Check if the product exists
+        temp = valid_json["productId"]
+        valid_json["productId"] = -5  # Non-existing productId
+        resp = client.put(STOCK_URL, json=valid_json)
+        assert resp.status_code == 404  # Not found
+        valid_json["productId"] = temp  # Reset productId
 
         # Edit productId of request json to be different from the body
         temp = valid_json["productId"]

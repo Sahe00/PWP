@@ -114,13 +114,16 @@ class StockItem(Resource):
             return create_error_response(400, "Invalid JSON document", str(e))
 
         # Check if the product exists
-        if db.session.query(Stock).filter(Stock.productId == product.productId).first() is None:
+        product_request_body = db.session.query(Product).filter(
+            Product.id == request.json["productId"]).first()
+        if product_request_body is None:
             return create_error_response(
                 404, "Not found",
-                f"Product with ID {product.productId} not found"
+                f"Product with ID {request.json["productId"]} not found"
             )
 
-        # Ensure productId is the same as the one in the URI, it cannot be modified
+        # Ensure productId is the same as the one in the URI, productId cannot be modified
+        product = db.session.query(Stock).filter(Stock.productId == product.productId).first()
         if 'productId' in request.json and request.json['productId'] != product.productId:
             return create_error_response(
                 400, "Invalid JSON document",
@@ -128,14 +131,13 @@ class StockItem(Resource):
             )
 
         try:
-            # product.deserialize(request.json)
-            product.quantity = request.json["quantity"]
+            product.deserialize(request.json)
             db.session.add(product)
             db.session.commit()
-
-            return Response(status=204)
         except IntegrityError:
             return create_error_response(404, "Not found", "Product not found")
+
+        return Response(status=204)
 
     @swag_from('../../doc/stock/stock_item_delete.yml')
     def delete(self, product):
