@@ -17,22 +17,29 @@ Instructions on how to setup and populate the database.
 
 ## Libraries
 
-Onlinstore uses Flask SQLAlchemy's version of SQLite for the database. 
+Onlinestore uses Flask SQLAlchemy's version of SQLite for the database. 
 
 Libraries:
+- requests
+- pyside6
+- flasgger
 - flask
 - flask-restful
 - flask-sqlalchemy
-- flasgger
-- jsonschema
 - pytest
 - pytest-coverage
+- jsonschema
 
 # How to start
-## Required libraries can be installed with pip:
+
+## Create virtual environment (optional):
+    python -m venv .venv
+    .venv\Scripts\activate.bat
+
+## Required libraries can be installed with pip (setup.py):
     pip install -e .
 
-## Setup database
+# Setup database
 
 __Only one of the following should be run.__
 
@@ -49,3 +56,5 @@ __Only one of the following should be run.__
 
 ### Run
     flask run
+
+# Setup client
