@@ -60,12 +60,13 @@ __Only one of the following should be run.__
 
 __If tests are failing, try deleting temp.db and database_test.db, then rerun the commands.__
 
-# Run API
+# Run API and client
 
-### Set Flask variables
+### Run Flask API
     set FLASK_APP=onlinestore
-
-### Run
+    set FLASK_ENV=development
     flask run
 
-# Setup client
+### Run client
+    cd Client
+    python main2.py
