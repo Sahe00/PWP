@@ -24,7 +24,7 @@ responses:
   '204':
     description: Customer updated successfully
   '400':
-    description: Invalid request body
+    description: Invalid JSON document
   '409':
     description: Customer with the same email already exists
   '415':

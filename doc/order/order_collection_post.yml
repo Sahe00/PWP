@@ -19,7 +19,7 @@ responses:
   '201':
     description: Order created successfully
   '400':
-    description: Invalid request body
+    description: Invalid JSON document
   '404':
     description: Customer with ID <id> not found
   '415':

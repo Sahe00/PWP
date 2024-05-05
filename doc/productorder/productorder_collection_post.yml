@@ -22,7 +22,7 @@ responses:
   '201':
     description: Productorder created successfully
   '400':
-    description: Invalid request body
+    description: Invalid JSON document
   '404':
     description: Order or product not found
   '415':

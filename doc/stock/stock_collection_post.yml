@@ -19,7 +19,7 @@ responses:
   '201':
     description: Stock created successfully
   '400':
-    description: Invalid request body
+    description: Invalid JSON document
   '409':
     description: Entry already exists / Product not found
   '415':

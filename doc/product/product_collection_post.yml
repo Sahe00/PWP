@@ -22,7 +22,7 @@ responses:
   '201':
     description: Product created successfully
   '400':
-    description: Invalid request body
+    description: Invalid JSON document
   '409':
     description: Product already exists
   '415':

@@ -22,6 +22,6 @@ responses:
   '204':
     description: Product updated successfully
   '400':
-    description: Invalid request body
+    description: Invalid JSON document
   '415':
     description: Unsupported media type
