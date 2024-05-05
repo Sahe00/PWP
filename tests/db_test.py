@@ -1,12 +1,8 @@
 """ Tests for the database models of onlinestore """
-import os
 import pytest
-import tempfile
-import time
 from datetime import datetime
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
-from sqlalchemy.exc import IntegrityError, StatementError
 
 from onlinestore import create_app, db
 from onlinestore.models import Customer, Order, Product, ProductOrder, Stock
