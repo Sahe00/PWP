@@ -49,7 +49,18 @@ __Only one of the following should be run.__
 ### To create database with test data, run this:
     python tests/createdatabase.py fill
 
-## Run API
+# Testing
+
+### Run resource and database tests
+    cd tests
+
+    pytest --cov-report term-missing resource_test.py --cov=onlinestore.resources
+
+    pytest db_test.py
+
+__If tests are failing, try deleting temp.db and database_test.db, then rerun the commands.__
+
+# Run API
 
 ### Set Flask variables
     set FLASK_APP=onlinestore
