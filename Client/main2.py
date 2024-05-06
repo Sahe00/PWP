@@ -88,6 +88,7 @@ class MainWindow(QMainWindow):
         self.order_buttons_layout.addWidget(self.edit_order_button)
         self.edit_order_button.clicked.connect(self.edit_order)
         # Orders table
+        self.orders_dict = {}
         self.orders_table = QTableWidget(0, 3)
         self.orders_table.setHorizontalHeaderLabels(["Order number", "Customer ID", "Created at"])
         self.orders_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -236,6 +237,7 @@ class MainWindow(QMainWindow):
         }
         try:
             r = self.send_request(s, ctrl, None)
+            self.orders_dict = r.json()
             orders = r.json()["orders"]
             print(orders)
             self.show_orders(orders)
@@ -253,7 +255,7 @@ class MainWindow(QMainWindow):
                 self.orders_table.setItem(row, i, QTableWidgetItem(str(o[key])))
 
     def open_order(self):
-        selected_indexes = self.customers_table.selectionModel().selectedIndexes()
+        selected_indexes = self.orders_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to open")
             self.statusBar().showMessage("Please select a row to open")
@@ -262,7 +264,49 @@ class MainWindow(QMainWindow):
         row = selected_indexes[0].row()
         order_id = self.orders_table.item(row, 0).text()
 
-        pass
+        # list of product orders comes with orderitem get
+        # check which ones match order id
+        with requests.Session() as s:
+            href = self.orders_dict["@controls"]["self"]["href"]
+            r = s.get(f"{self.API_URL}{href}{order_id}/")
+            data = r.json()
+            product_order_list = data["productorders"]
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Order Details")
+        dialog_layout = QVBoxLayout(dialog)
+
+        products_table = QTableWidget(0, 3)
+        products_table.setHorizontalHeaderLabels(["Product name", "Quantity", "Price"])
+        products_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        dialog_layout.addWidget(products_table)
+
+        sum_display = QHBoxLayout()
+        sum_display.addWidget(QLabel("Total:"))
+
+        total_sum = 0
+
+        # list of products in matching product orders
+        with requests.Session() as s:
+            for po in product_order_list:
+                row = products_table.rowCount()
+                products_table.insertRow(row)
+                href = "/api/products/"
+                href += str(po["productId"])
+                href += "/"
+                r = s.get(f"{self.API_URL}{href}")
+                product_data = r.json()
+                products_table.setItem(row, 0, QTableWidgetItem(product_data["name"]))
+                products_table.setItem(row, 1, QTableWidgetItem(str(po["quantity"])))
+                products_table.setItem(row, 2, QTableWidgetItem(str(product_data["price"] * po["quantity"])))
+                total_sum += product_data["price"] * po["quantity"]
+
+        sum_display.addWidget(QLabel(str(total_sum)))
+        dialog_layout.addLayout(sum_display)
+
+        #maybe get customer info too
+
+        dialog.exec()
 
     def edit_order(self):
         pass
