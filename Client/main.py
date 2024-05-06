@@ -703,15 +703,18 @@ class MainWindow(QMainWindow):
             try:
                 r = self.send_request(s, ctrl, data)
                 if r.status_code == 204:
+                    QMessageBox.information(dialog, "Success", "Product updated successfully")
                     print("Product updated successfully")
                     self.statusBar().showMessage("Product updated successfully")
                     dialog.accept()
                     self.get_products()
                 else:
+                    QMessageBox.warning(dialog, "Failed", f"Failed to update product: {r.text}")
                     print(f"Failed to update product: {r.text}")
                     # message = r.json()["@error"]["@messages"][0]
                     # self.statusBar().showMessage(f"Error: {message}")
             except Exception as e:
+                QMessageBox.critical(dialog, "Error", f"An error occurred: {e}")
                 print(f"Error occurred: {e}")
 
         save_button = QPushButton("Save")
@@ -898,18 +901,23 @@ class MainWindow(QMainWindow):
         dialog.setWindowTitle("Edit Stock")
         dialog_layout = QVBoxLayout(dialog)
 
-        edit_fields = {}
-        for i, key in enumerate(["productId", "quantity"]):
-            label = QLabel(key)
-            dialog_layout.addWidget(label)
-            line_edit = QLineEdit(self.stock_table.item(row, i).text())
-            dialog_layout.addWidget(line_edit)
-            edit_fields[key] = line_edit
+        hlayout = QHBoxLayout()
+        label = QLabel(f"Product ID: ")
+        hlayout.addWidget(label)
+        id_field = QLineEdit(self.stock_table.item(row, 0).text())
+        id_field.setReadOnly(True)
+        hlayout.addWidget(id_field)
+        dialog_layout.addLayout(hlayout)
+        hlayout = QHBoxLayout()
+        label = QLabel(f"Quantity: ")
+        hlayout.addWidget(label)
+        line_edit = QLineEdit(self.stock_table.item(row, 1).text())
+        hlayout.addWidget(line_edit)
+        dialog_layout.addLayout(hlayout)
 
         def save_stock():
-            data = {key: line_edit.text() for key, line_edit in edit_fields.items()}
-            data["quantity"] = float(data["quantity"])
-            data["productId"] = int(data["productId"])
+            data["quantity"] = float(line_edit.text())
+            data["productId"] = int(self.stock_table.item(row, 0).text())
             s = requests.Session()
             try:
                 r = self.send_request(s, ctrl, data)
