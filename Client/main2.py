@@ -22,6 +22,39 @@ class TableWidget(QTableWidget):
             print(f"Double clicked on row {index.row()}")
         else:
             pass
+        
+        
+#class OrderDialog(QDialog):
+#    def __init__(self, customer_uuid, order_id, parent=None):
+#        super().__init__(parent)
+#        self.setWindowTitle("Create Order")
+#
+#        self.customer_uuid = customer_uuid
+#        self.order_id = order_id
+#
+#        # Initialize UI components
+#        dialog_layout = QVBoxLayout(self)
+#
+#        # Create dropdown menu
+#        self.product_combobox = QComboBox(self)
+#        dialog_layout.addWidget(QLabel("Select Product(s):"))
+#        dialog_layout.addWidget(self.product_combobox)
+#
+#        # List product names in the dropdown menu
+#        self.get_products()  # Fetch products (assuming this method exists)
+#        products = self.products_dict["products"]
+#        for prod in products:
+#            self.product_combobox.addItem(prod["name"])
+#
+#        self.submit_button = QPushButton("Submit", self)
+#        dialog_layout.addWidget(self.submit_button)
+#        self.submit_button.clicked.connect(self.submit_order)
+#
+#    def submit_order(self):
+#        selected_product = self.product_combobox.currentText()
+#        print(f"Selected Product: {selected_product}")
+#        # Perform further actions with the selected product and order details
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -318,7 +351,7 @@ class MainWindow(QMainWindow):
         # Create order
         #    customer_uuid
         #    createdAt
-        #    Save orderId from response
+        #    Save orderId from response header
         # Select products
         #    Get products in stock to dropdown menu
         #    set quantity
@@ -352,7 +385,7 @@ class MainWindow(QMainWindow):
             r = self.send_request(s, ctrl, data)
             if r.status_code == 201:
                 # Save orderId from response
-                order_id = r.json()["orderId"]
+                order_id = r.headers["Location"].rstrip('/').split('/')[-1]
                 print(f"Order created successfully: {order_id}")
                 self.statusBar().showMessage(f"Order created successfully: {order_id}")
                 #self.create_product_order(order_id)
@@ -369,11 +402,26 @@ class MainWindow(QMainWindow):
         dialog_layout = QVBoxLayout(dialog)
 
         # Select products
-        products = self.stock_dict["items"]
+        self.get_products()
+        products = self.products_dict["products"]
+        
+        # Initialize UI components
+        layout = QVBoxLayout(self)
+        #dialog = OrderDialog(customer_uuid, order_id)
+    
+        # Create dropdown menu
+        self.product_combobox = QComboBox(self)
+        layout.addWidget(QLabel("Select Product(s):"))
+        layout.addWidget(self.product_combobox)
+    
+        self.submit_button = QPushButton("Submit", self)
+        #self.submit_button.clicked.connect(self.submit_products)
+        layout.addWidget(self.submit_button)
 
-        # Create product orders
+        # List product names in the dropdown menu
         for prod in products:
-            label = QLabel(prod["productId"])
+            label = QLabel(prod["name"])
+            self.product_combobox.addItem(prod["name"])
             dialog_layout.addWidget(label)
 
         save_button = QPushButton("Save")
