@@ -75,7 +75,7 @@ class ProductItem(Resource):
         ''' Get product information '''
         body = InventoryBuilder(product.serialize())
         body.add_namespace("store", LINK_RELATIONS_URL)
-        body.add_control("self", href=url_for("api.productitem", product=product.name))
+        body.add_control("self", href=url_for("api.productitem", product=product.id))
         body.add_control("profile", PRODUCT_PROFILE)
         body.add_control("collection", href=url_for("api.productcollection"))
         body.add_control_get_productorder(product)  # GET product order for the product

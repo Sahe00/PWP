@@ -51,7 +51,7 @@ class OrderCollection(Resource):
 
         # Check if the customer exists
         customerId = request.json["customerId"]
-        if db.session.query(Customer).filter(Customer.id == customerId).first() is None:
+        if db.session.query(Customer).filter(Customer.uuid == customerId).first() is None:
             return create_error_response(
                 404, "Not found",
                 "Customer with id '{}' not found.".format(customerId)

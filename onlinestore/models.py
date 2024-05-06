@@ -55,7 +55,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
 
     # Set foreign key to null if customer is deleted
-    customerId = db.Column(db.Integer, db.ForeignKey('customer.id', ondelete="SET NULL"))
+    customerId = db.Column(db.String(36), db.ForeignKey('customer.uuid', ondelete="SET NULL"))
     createdAt = db.Column(db.String(50), nullable=False)
 
     customer = db.relationship('Customer', back_populates="orders")
@@ -81,7 +81,7 @@ class Order(db.Model):
         return {
             "type": "object",
             "properties": {
-                "customerId": {"type": "integer"},
+                "customerId": {"type": "string"},
                 "createdAt": {"type": "string"}
             },
             "required": ["customerId", "createdAt"]
@@ -131,7 +131,7 @@ class ProductOrder(db.Model):
 class Product(db.Model):
     """ Product model """
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    name = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String(64), nullable=False, unique=True)
     desc = db.Column(db.String(128), nullable=False)
     price = db.Column(db.Float, nullable=False)
 

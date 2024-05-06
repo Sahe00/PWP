@@ -369,9 +369,9 @@ class ProductConverter(BaseConverter):
     based on the product's name.
     """
 
-    def to_python(self, product_name):  # used in routing
+    def to_python(self, product_id):  # used in routing
         ''' Convert product name to Product object '''
-        db_product = Product.query.filter_by(name=product_name).first()
+        db_product = Product.query.filter_by(id=product_id).first()
         if db_product is None:
             raise NotFound
         return db_product
