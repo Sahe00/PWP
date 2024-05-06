@@ -451,20 +451,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def create_order(self):
-        # Get customer uuid
-        # Create order
-        #    customer_uuid
-        #    createdAt
-        #    Save orderId from response header
-        # Select products
-        #    Get products in stock to dropdown menu
-        #    set quantity
-        # Create product orders
-        #    orderId
-        #    productId
-        #    quantity
-        #  Update stock for products
-
         # Select customer for order
         selected_indexes = self.customers_table.selectionModel().selectedIndexes()
         if not selected_indexes:
@@ -493,7 +479,95 @@ class MainWindow(QMainWindow):
                 order_id = r.headers["Location"].rstrip('/').split('/')[-1]
                 print(f"Order created successfully: {order_id}")
                 self.statusBar().showMessage(f"Order created successfully: {order_id}")
-                #self.create_product_order(order_id)
+
+                def select_products_for_order(order_id):
+                    dialog = QDialog(self)
+                    dialog.setWindowTitle("Select products for order")
+                    dialog_layout = QVBoxLayout(dialog)
+
+                    # Get products
+                    self.get_products()
+                    products = self.products_dict["products"]
+
+                    # Create table for products and quantities
+                    products_table = QTableWidget(0, 2)
+                    products_table.setHorizontalHeaderLabels(["Product", "Quantity"])
+                    dialog_layout.addWidget(products_table)
+
+                    # List products in the table
+                    for prod in products:
+                        row = products_table.rowCount()
+                        products_table.insertRow(row)
+                        # Add product name
+                        name_item = QTableWidgetItem(prod["name"])
+                        name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                        products_table.setItem(row, 0, name_item)
+                        # Add quantity input field
+                        quantity_item = QTableWidgetItem("0")
+                        products_table.setItem(row, 1, quantity_item)
+
+                    save_button = QPushButton("Save")
+                    dialog_layout.addWidget(save_button)
+                    save_button.clicked.connect(lambda: save_product_order(products_table, dialog))
+
+                    dialog.exec()
+
+                def save_product_order(products_table, dialog):
+                    ctrl = {
+                        "method": "post",
+                        "href": "/api/productorders/"
+                    }
+                    product_orders = []
+                    for i in range(products_table.rowCount()):
+                        if int(products_table.item(i, 1).text()) > 0:
+                            for prod in self.products_dict["products"]:
+                                if prod["name"] == products_table.item(i, 0).text():
+                                    product_id = int(prod["@controls"]["self"]["href"].split("/")[-2])
+                                    break
+                            quantity = int(products_table.item(i, 1).text())
+                            product_orders.append({
+                                "productId": product_id,
+                                "orderId": int(order_id),
+                                "quantity": quantity
+                            })
+                    with requests.Session() as s:
+                        for po in product_orders:
+                            r = self.send_request(s, ctrl, po)
+                            if r.status_code == 201:
+                                print(f"Product order created successfully: {po}")
+                                reduce_stock(s, po)
+                            else:
+                                print(f"Failed to create product order: {r.text}")
+
+
+                    dialog.accept()
+                    self.get_orders()
+                    self.get_stock()
+                    QMessageBox.information(dialog, "Success", f"Order created successfully: {po}")
+
+                def reduce_stock(s, po):
+                    pid = po["productId"]
+                    ctrl = {
+                        "method": "put",
+                        "href": f"/api/stock/{pid}/"
+                    }
+                    r = s.get(f"{self.API_URL}{ctrl['href']}")
+                    stock = r.json()
+                    data = {
+                        "productId": pid,
+                        "quantity": stock["quantity"] - po["quantity"]
+                    }
+
+                    r = self.send_request(s, ctrl, data)
+
+                    if r.status_code == 204:
+                        print(f"Stock updated successfully: {po}")
+                    else:
+                        print(f"Failed to update stock: {r.text}")
+
+
+                # Call the damn thing
+                select_products_for_order(order_id)
             else:
                 print(f"Failed to create order: {r.text}")
                 message = r.json()["@error"]["@messages"][0]
@@ -501,39 +575,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"Error occurred: {e}")
             self.statusBar().showMessage(f"Error occurred: {e}")
-
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Create Order")
-        dialog_layout = QVBoxLayout(dialog)
-
-        # Select products
-        self.get_products()
-        products = self.products_dict["products"]
-
-        # Initialize UI components
-        layout = QVBoxLayout(self)
-        #dialog = OrderDialog(customer_uuid, order_id)
-
-        # Create dropdown menu
-        self.product_combobox = QComboBox(self)
-        layout.addWidget(QLabel("Select Product(s):"))
-        layout.addWidget(self.product_combobox)
-
-        self.submit_button = QPushButton("Submit", self)
-        #self.submit_button.clicked.connect(self.submit_products)
-        layout.addWidget(self.submit_button)
-
-        # List product names in the dropdown menu
-        for prod in products:
-            label = QLabel(prod["name"])
-            self.product_combobox.addItem(prod["name"])
-            dialog_layout.addWidget(label)
-
-        save_button = QPushButton("Save")
-        dialog_layout.addWidget(save_button)
-        save_button.clicked.connect(lambda: self.save_product_order(dialog, order_id, ctrl))
-
-        dialog.exec()
 
     def create_customer(self):
         # Create the dialog window
