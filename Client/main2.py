@@ -22,8 +22,8 @@ class TableWidget(QTableWidget):
             print(f"Double clicked on row {index.row()}")
         else:
             pass
-        
-        
+
+
 #class OrderDialog(QDialog):
 #    def __init__(self, customer_uuid, order_id, parent=None):
 #        super().__init__(parent)
@@ -92,6 +92,10 @@ class MainWindow(QMainWindow):
         self.customer_buttons_layout.addWidget(self.create_order_button)
         self.create_order_button.clicked.connect(self.create_order)
         # self.layout.addLayout(self.customer_buttons)
+        # Create customer
+        self.create_customer_button = QPushButton("Create Customer")
+        self.customer_buttons_layout.addWidget(self.create_customer_button)
+        self.create_customer_button.clicked.connect(self.create_customer)
         # Customers table
         self.customers_dict = {}
         self.customers_table = QTableWidget(0, 5)
@@ -121,6 +125,10 @@ class MainWindow(QMainWindow):
         self.edit_order_button = QPushButton("Edit")
         self.order_buttons_layout.addWidget(self.edit_order_button)
         self.edit_order_button.clicked.connect(self.edit_order)
+        # Delete order
+        self.delete_order_button = QPushButton("Delete")
+        self.order_buttons_layout.addWidget(self.delete_order_button)
+        self.delete_order_button.clicked.connect(self.delete_order)
         # Orders table
         self.orders_dict = {}
         self.orders_table = QTableWidget(0, 3)
@@ -182,6 +190,14 @@ class MainWindow(QMainWindow):
 
         self.setStatusBar(QStatusBar(self))
 
+        self.auto_refresh()
+
+    def auto_refresh(self):
+        self.get_customers()
+        self.get_orders()
+        self.get_products()
+        self.get_stock()
+
     def get_customers(self):
         self.statusBar().showMessage("Getting customers...")
         s = requests.Session()
@@ -205,7 +221,9 @@ class MainWindow(QMainWindow):
             row = self.customers_table.rowCount()
             self.customers_table.insertRow(row)
             for i, key in enumerate(["uuid", "firstName", "lastName", "email", "phone"]):
-                self.customers_table.setItem(row, i, QTableWidgetItem(c[key]))
+                item = QTableWidgetItem(c[key])
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.customers_table.setItem(row, i, item)
             # s = c["firstName"] + " " + c["lastName"]
             # self.customers_table.setItem(row, 0, QTableWidgetItem(s.strip()))
 
@@ -286,7 +304,10 @@ class MainWindow(QMainWindow):
             row = self.orders_table.rowCount()
             self.orders_table.insertRow(row)
             for i, key in enumerate(["id", "customerId", "createdAt"]):
-                self.orders_table.setItem(row, i, QTableWidgetItem(str(o[key])))
+                item = QTableWidgetItem(str(o[key]))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.orders_table.setItem(row, i, item)
+
 
     def open_order(self):
         selected_indexes = self.orders_table.selectionModel().selectedIndexes()
@@ -346,6 +367,43 @@ class MainWindow(QMainWindow):
     def edit_order(self):
         pass
 
+    def delete_order(self):
+        selected_indexes = self.orders_table.selectionModel().selectedIndexes()
+        if not selected_indexes:
+            print("Please select a row to delete")
+            self.statusBar().showMessage("Please select a row to delete")
+            return
+
+        row = selected_indexes[0].row()
+        order_id = self.orders_table.item(row, 0).text()
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Are you sure?")
+        dialog_layout = QHBoxLayout(dialog)
+        yes_button = QPushButton("Yes")
+        no_button = QPushButton("No")
+        dialog_layout.addWidget(yes_button)
+        dialog_layout.addWidget(no_button)
+        yes_button.clicked.connect(lambda: self.delete_order_confirm(dialog, order_id))
+        no_button.clicked.connect(dialog.reject)
+
+        dialog.exec()
+
+    def delete_order_confirm(self, dialog, order_id):
+        dialog.accept()
+        with requests.Session() as s:
+            href = self.orders_dict["@controls"]["self"]["href"]
+            r = s.delete(f"{self.API_URL}{href}{order_id}/")
+            if r.status_code == 204:
+                print(f"Order {order_id} deleted successfully")
+                self.statusBar().showMessage(f"Order {order_id} deleted successfully")
+                self.get_orders()
+            else:
+                print(f"Failed to delete order {order_id}: {r.text}")
+                message = r.json()["@error"]["@messages"][0]
+                self.statusBar().showMessage(f"Error: {message}")
+
+
     def create_order(self):
         # Get customer uuid
         # Create order
@@ -404,16 +462,16 @@ class MainWindow(QMainWindow):
         # Select products
         self.get_products()
         products = self.products_dict["products"]
-        
+
         # Initialize UI components
         layout = QVBoxLayout(self)
         #dialog = OrderDialog(customer_uuid, order_id)
-    
+
         # Create dropdown menu
         self.product_combobox = QComboBox(self)
         layout.addWidget(QLabel("Select Product(s):"))
         layout.addWidget(self.product_combobox)
-    
+
         self.submit_button = QPushButton("Submit", self)
         #self.submit_button.clicked.connect(self.submit_products)
         layout.addWidget(self.submit_button)
@@ -428,6 +486,64 @@ class MainWindow(QMainWindow):
         dialog_layout.addWidget(save_button)
         save_button.clicked.connect(lambda: self.save_product_order(dialog, order_id, ctrl))
 
+        dialog.exec()
+
+    def create_customer(self):
+        # Create the dialog window
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Create Customer")
+        layout = QFormLayout(dialog)
+        # Input fields
+        first_name_input = QLineEdit()
+        last_name_input = QLineEdit()
+        email_input = QLineEdit()
+        phone_input = QLineEdit()
+        # Adding widgets to the form
+        layout.addRow("First Name:", first_name_input)
+        layout.addRow("Last Name:", last_name_input)
+        layout.addRow("Email:", email_input)
+        layout.addRow("Phone (optional):", phone_input)
+        # Save Button
+        save_button = QPushButton("Save")
+        layout.addRow(save_button)
+
+        # Function to create customer
+        def submit_customer():
+            first_name = first_name_input.text()
+            last_name = last_name_input.text()
+            email = email_input.text()
+            phone = phone_input.text()
+
+            # Validate input data
+            if not all([first_name, last_name, email]) or '@' not in email:
+                QMessageBox.warning(dialog, "Invalid Input", "Check all the fields and provide valid inputs.")
+                return
+
+            ctrl = {
+                "method": "post",
+                "href": "/api/customers/"
+            }
+
+            # Setup the API request
+            data = {
+                "firstName": first_name,
+                "lastName": last_name,
+                "email": email,
+                "phone": phone if phone else ""
+            }
+            try:
+                s = requests.Session()
+                r = self.send_request(s, ctrl, data)
+                if r.status_code == 201:
+                    # print(f"Customer created successfully: {first_name} {last_name}")
+                    QMessageBox.information(dialog, "Success", f"Customer {first_name} {last_name} created successfully.")
+                    dialog.accept()
+                else:
+                    QMessageBox.warning(dialog, "Failed", f"Unable to create customer: {r.text}")
+            except Exception as e:
+                QMessageBox.critical(dialog, "Error", f"An error occurred: {e}")
+
+        save_button.clicked.connect(submit_customer)
         dialog.exec()
 
 
@@ -455,7 +571,10 @@ class MainWindow(QMainWindow):
             row = self.products_table.rowCount()
             self.products_table.insertRow(row)
             for i, key in enumerate(["name", "desc", "price"]):
-                self.products_table.setItem(row, i, QTableWidgetItem(str(p[key])))
+                item = QTableWidgetItem(str(p[key]))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.products_table.setItem(row, i, item)
+
 
 
     def edit_product(self):
@@ -535,7 +654,10 @@ class MainWindow(QMainWindow):
             row = self.stock_table.rowCount()
             self.stock_table.insertRow(row)
             for i, key in enumerate(["productId", "quantity"]):
-                self.stock_table.setItem(row, i, QTableWidgetItem(str(p[key])))
+                item = QTableWidgetItem(str(p[key]))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.stock_table.setItem(row, i, item)
+
 
 
     def edit_stock(self):
