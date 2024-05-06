@@ -264,6 +264,8 @@ class MainWindow(QMainWindow):
         row = selected_indexes[0].row()
         order_id = self.orders_table.item(row, 0).text()
 
+        self.set_status(f"Opening order {order_id}...")
+
         # list of product orders comes with orderitem get
         # check which ones match order id
         with requests.Session() as s:
@@ -291,9 +293,7 @@ class MainWindow(QMainWindow):
             for po in product_order_list:
                 row = products_table.rowCount()
                 products_table.insertRow(row)
-                href = "/api/products/"
-                href += str(po["productId"])
-                href += "/"
+                href = "/api/products/" + str(po["productId"]) + "/"
                 r = s.get(f"{self.API_URL}{href}")
                 product_data = r.json()
                 products_table.setItem(row, 0, QTableWidgetItem(product_data["name"]))
@@ -306,7 +306,11 @@ class MainWindow(QMainWindow):
 
         #maybe get customer info too
 
+        self.statusBar().showMessage(f"Order {order_id} opened")
         dialog.exec()
+
+    def set_status(self, message):
+        self.statusBar().showMessage(message)
 
     def edit_order(self):
         pass
