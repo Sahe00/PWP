@@ -112,9 +112,10 @@ class StockItem(Resource):
         product_request_body = db.session.query(Product).filter(
             Product.id == request.json["productId"]).first()
         if product_request_body is None:
+            id = request.json["productId"]
             return create_error_response(
                 404, "Not found",
-                f"Product with ID {request.json["productId"]} not found"
+                f"Product with ID {id} not found"
             )
 
         # Ensure productId is the same as the one in the URI, productId cannot be modified
