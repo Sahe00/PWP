@@ -29,7 +29,7 @@ class ProductCollection(Resource):
         # List all products in the database
         for product in Product.query.all():
             item = InventoryBuilder(product.serialize())
-            item.add_control("self", href=url_for("api.productitem", product=product.name))
+            item.add_control("self", href=url_for("api.productitem", product=product.id))
             item.add_control("profile", PRODUCT_PROFILE)
             body["products"].append(item)
 
@@ -63,7 +63,7 @@ class ProductCollection(Resource):
         db.session.commit()
 
         return Response(status=201, headers={
-            "Location": url_for("api.productitem", product=product.name)
+            "Location": url_for("api.productitem", product=product.id)
         })
 
 

@@ -247,7 +247,7 @@ class InventoryBuilder(MasonBuilder):
         ''' Add control to get product '''
         self.add_control(
             "productorder:get-product",
-            url_for("api.productitem", product=productorder.product.name),
+            url_for("api.productitem", product=productorder.product.id),
             method="GET",
             title="Get product for the productorder",
         )
@@ -300,7 +300,7 @@ class InventoryBuilder(MasonBuilder):
         ''' Add control to edit product '''
         self.add_control_put(
             "Edit a product",
-            url_for("api.productitem", product=product.name),
+            url_for("api.productitem", product=product.id),
             Product.json_schema()
         )
 
@@ -330,7 +330,7 @@ class InventoryBuilder(MasonBuilder):
 
     def add_control_delete_product(self, product):
         ''' Add control to delete product '''
-        href = url_for("api.productitem", product=product.name)
+        href = url_for("api.productitem", product=product.id)
         self.add_control_delete("Delete a product", href=href)
 
     def add_control_delete_customer(self, customer):

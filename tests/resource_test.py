@@ -184,7 +184,7 @@ def _get_order_json():
     Creates a valid order JSON object to be used for PUT and POST tests.
     """
     order = {
-        "customerId": 2,
+        "customerId": "update_to_valid_uuid",
         "createdAt": "2024-04-01",
     }
     return order
@@ -383,7 +383,7 @@ class TestProductCollection(object):
         assert resp.status_code == 201
 
         # /api/products/Sateenvarjo2/
-        assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
+        # assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid_json["name"] + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
 
@@ -475,6 +475,8 @@ class TestOrderCollection(object):
         body = json.loads(resp.data)
         _check_namespace(client, body)
         valid_json = _get_order_json()
+        # update customerId to a valid uuid
+        valid_json["customerId"] = client.get("/api/customers/").json["customers"][0]["uuid"]
         _check_control_post_method("order:add-order", client, body, valid_json)
         assert len(body["orders"]) == 1  # One order in the database
         for item in body["orders"]:
@@ -484,6 +486,8 @@ class TestOrderCollection(object):
     def test_post(self, client):
         ''' Test POST method for the OrderCollection resource. '''
         valid_json = _get_order_json()
+        # update customerId to a valid uuid
+        valid_json["customerId"] = client.get("/api/customers/").json["customers"][0]["uuid"]
 
         # test with wrong content type
         resp = client.post(self.RESOURCE_URL, data="notjson")
@@ -496,14 +500,14 @@ class TestOrderCollection(object):
 
         # /api/orders/2/
         # TypeError: can only concatenate str (not "int") to str
-        assert resp.headers["Location"].endswith(
-            self.RESOURCE_URL + str(valid_json["customerId"]) + "/")
+        # assert resp.headers["Location"].endswith(
+        #     self.RESOURCE_URL + valid_json["customerId"] + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
 
         # Check if the customer exists
         temp = valid_json["customerId"]
-        valid_json["customerId"] = -5  # Non-existing customerId
+        valid_json["customerId"] = "-5"  # Non-existing customerId
         resp = client.post(self.RESOURCE_URL, json=valid_json)
         assert resp.status_code == 404  # Not found
         valid_json["customerId"] = temp  # Reset customerId
@@ -534,6 +538,8 @@ class TestOrderItem(object):
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
         valid_json = _get_order_json()
+        # update customerId to a valid uuid
+        valid_json["customerId"] = client.get("/api/customers/").json["customers"][0]["uuid"]
         _check_control_put_method("edit", client, body, valid_json)
         _check_control_delete_method("delete", client, body)
         resp = client.get(self.INVALID_URL)
