@@ -1,6 +1,7 @@
 import sys
 import os
 import threading
+from datetime import datetime
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QVBoxLayout, QWidget, QPushButton, QLabel, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QDialog
 from PySide6.QtWidgets import *
@@ -314,8 +315,8 @@ class MainWindow(QMainWindow):
     def create_order(self):
         # Get customer uuid
         # Create order
+        #    customer_uuid
         #    createdAt
-        #    customerId
         #    Save orderId from response
         # Select products
         #    Get products in stock to dropdown menu
@@ -326,7 +327,60 @@ class MainWindow(QMainWindow):
         #    quantity
         #  Update stock for products
 
-        pass
+        selected_indexes = self.customers_table.selectionModel().selectedIndexes()
+        if not selected_indexes:
+            print("Please select a row to create an order")
+            self.statusBar().showMessage("Please select a row to create an order")
+            return
+        
+        # Get customer uuid        
+        row = selected_indexes[0].row()
+        customer_uuid = self.customers_table.item(row, 0).text()
+
+        ctrl = {
+            "method": "post",
+            "href": "/api/orders/"
+        }
+        data = {
+            "customerId": customer_uuid,
+            "createdAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        try:
+            # Create order
+            s = requests.Session()
+            r = self.send_request(s, ctrl, data)
+            if r.status_code == 201:
+                # Save orderId from response
+                order_id = r.json()["orderId"]
+                print(f"Order created successfully: {order_id}")
+                self.statusBar().showMessage(f"Order created successfully: {order_id}")
+                #self.create_product_order(order_id)
+            else:
+                print(f"Failed to create order: {r.text}")
+                message = r.json()["@error"]["@messages"][0]
+                self.statusBar().showMessage(f"Error: {message}")
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            self.statusBar().showMessage(f"Error occurred: {e}")
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Create Order")
+        dialog_layout = QVBoxLayout(dialog)
+
+        # Select products
+        products = self.stock_dict["items"]
+
+        # Create product orders
+        for prod in products:
+            label = QLabel(prod["productId"])
+            dialog_layout.addWidget(label)
+
+        save_button = QPushButton("Save")
+        dialog_layout.addWidget(save_button)
+        save_button.clicked.connect(lambda: self.save_product_order(dialog, order_id, ctrl))
+
+        dialog.exec()
+
 
     def get_products(self):
         self.statusBar().showMessage("Getting products...")
@@ -344,6 +398,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"An error occurred: {e}")
             self.statusBar().showMessage(f"An error occurred: {e}")
+
 
     def show_products(self, products):
         self.products_table.setRowCount(0)
