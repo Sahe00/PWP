@@ -25,7 +25,7 @@ responses:
                 type: object
                 properties:
                   customerId:
-                    type: integer
+                    type: string
                   createdAt:
                     type: string
                 required:
@@ -34,7 +34,7 @@ responses:
               href: /api/orders/
           orders:
             - id: 1
-              customerId: 1
+              customerId: e6a27c66-8013-411b-bff9-27c481ff5687
               createdAt: 2024-02-27 16:44:47
               "@controls":
                 self:
@@ -42,7 +42,7 @@ responses:
                 profile:
                   href: /profiles/order/
             - id: 2
-              customerId: 1
+              customerId: e6a27c66-8013-411b-bff9-27c481ff5687
               createdAt: 2024-03-01 12:30:00
               "@controls":
                 self:

@@ -9,7 +9,7 @@ requestbody:
         type: object
         properties:
           customerId:
-            type: integer
+            type: string
           createdAt:
             type: string
         required:

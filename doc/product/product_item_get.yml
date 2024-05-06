@@ -16,7 +16,7 @@ responses:
               name: /onlinestore/link-relations/
           "@controls":
             self:
-              href: /api/products/Sateenvarjo/
+              href: /api/products/1/
             profile:
               href: /profiles/product/
             collection:
@@ -46,8 +46,8 @@ responses:
                   - name
                   - desc
                   - price
-              href: /api/products/Sateenvarjo/
+              href: /api/products/1/
             delete:
               method: DELETE
               title: Delete a product
-              href: /api/customers/Sateenvarjo/
+              href: /api/products/1/
