@@ -265,7 +265,7 @@ class MainWindow(QMainWindow):
         row = selected_indexes[0].row()
         order_id = self.orders_table.item(row, 0).text()
 
-        self.set_status(f"Opening order {order_id}...")
+        self.statusBar().showMessage(f"Opening order {order_id}...")
 
         # list of product orders comes with orderitem get
         # check which ones match order id
@@ -310,9 +310,6 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Order {order_id} opened")
         dialog.exec()
 
-    def set_status(self, message):
-        self.statusBar().showMessage(message)
-
     def edit_order(self):
         pass
 
@@ -336,8 +333,8 @@ class MainWindow(QMainWindow):
             print("Please select a row to create an order")
             self.statusBar().showMessage("Please select a row to create an order")
             return
-        
-        # Get customer uuid        
+
+        # Get customer uuid
         row = selected_indexes[0].row()
         customer_uuid = self.customers_table.item(row, 0).text()
 
