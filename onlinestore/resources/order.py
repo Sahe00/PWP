@@ -8,7 +8,10 @@ from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Order, Customer
 from onlinestore.utils import InventoryBuilder, create_error_response
-from onlinestore.constants import *
+from onlinestore.constants import (
+    JSON, MASON, LINK_RELATIONS_URL,
+    ORDER_PROFILE, PRODUCTORDER_PROFILE
+)
 
 
 class OrderCollection(Resource):
@@ -54,7 +57,7 @@ class OrderCollection(Resource):
         if db.session.query(Customer).filter(Customer.uuid == customerId).first() is None:
             return create_error_response(
                 404, "Not found",
-                "Customer with id '{}' not found.".format(customerId)
+                f"Customer with ID {customerId} not found."
             )
 
         order = Order()

@@ -8,7 +8,7 @@ from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Product
 from onlinestore.utils import InventoryBuilder, create_error_response
-from onlinestore.constants import *
+from onlinestore.constants import JSON, MASON, LINK_RELATIONS_URL, PRODUCT_PROFILE
 
 
 class ProductCollection(Resource):

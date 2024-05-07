@@ -8,7 +8,7 @@ from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Customer
 from onlinestore.utils import InventoryBuilder, create_error_response
-from onlinestore.constants import *
+from onlinestore.constants import JSON, MASON, LINK_RELATIONS_URL, CUSTOMER_PROFILE, ORDER_PROFILE
 
 
 class CustomerCollection(Resource):
@@ -54,7 +54,7 @@ class CustomerCollection(Resource):
         if db.session.query(Customer).filter(Customer.email == email).first():
             return create_error_response(
                 409, "Already exists",
-                "Customer with email '{}' already exists.".format(email)
+                f"Customer with email '{email}' already exists."
             )
 
         customer = Customer()
@@ -113,7 +113,7 @@ class CustomerItem(Resource):
         if customer.email != email and email_exists:
             return create_error_response(
                 409, "Already exists",
-                "Customer with email '{}' already exists.".format(email)
+                f"Customer with email '{email}' already exists."
             )
 
         customer.deserialize(request.json)

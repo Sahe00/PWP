@@ -1,3 +1,4 @@
+''' Constant variables for the Online Store API '''
 JSON = "application/json"
 MASON = "application/vnd.mason+json"
 LINK_RELATIONS_URL = "/onlinestore/link-relations/"

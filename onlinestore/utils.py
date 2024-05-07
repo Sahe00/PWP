@@ -6,8 +6,8 @@ from flask import Response, request, url_for
 from werkzeug.routing import BaseConverter
 from werkzeug.exceptions import NotFound
 
-from onlinestore.models import *
-from onlinestore.constants import *
+from onlinestore.models import Product, Customer, Order, ProductOrder, Stock
+from onlinestore.constants import ERROR_PROFILE, MASON
 
 
 class MasonBuilder(dict):
@@ -105,8 +105,6 @@ class MasonBuilder(dict):
         : param str title: human-readable title for the control
         : param dict schema: a dictionary representing a valid JSON schema
         """
-
-        # TODO: Change name prefix to store:edit?
         self.add_control(
             "edit",
             href,
@@ -126,8 +124,6 @@ class MasonBuilder(dict):
         : param str href: target URI for the control
         : param str title: human-readable title for the control
         """
-
-        # TODO: Change name prefix to store:delete?
         self.add_control(
             "delete",
             href,
@@ -357,6 +353,7 @@ class InventoryBuilder(MasonBuilder):
 
 
 def create_error_response(status_code, title, message=None):
+    ''' Create an error response '''
     resource_url = request.path
     body = MasonBuilder(resource_url=resource_url)
     body.add_error(title, message)
@@ -371,18 +368,18 @@ class ProductConverter(BaseConverter):
     based on the product's name.
     """
 
-    def to_python(self, product_id):  # used in routing
+    def to_python(self, value):  # used in routing
         ''' Convert product name to Product object '''
-        db_product = Product.query.filter_by(id=product_id).first()
+        db_product = Product.query.filter_by(id=value).first()
         if db_product is None:
             raise NotFound
         return db_product
 
-    def to_url(self, db_product):  # used in reverse routing
+    def to_url(self, value):  # used in reverse routing
         ''' Convert Product object to product name '''
         # db_product.name
         # AttributeError: 'str' object has no attribute 'name'
-        return str(db_product)
+        return str(value)
 
 
 class CustomerConverter(BaseConverter):
@@ -392,16 +389,16 @@ class CustomerConverter(BaseConverter):
     is based on the customer's UUID.
     """
 
-    def to_python(self, customer_uuid):  # used in routing
+    def to_python(self, value):  # used in routing
         ''' Convert customer UUID to Customer object '''
-        db_customer = Customer.query.filter_by(uuid=customer_uuid).first()
+        db_customer = Customer.query.filter_by(uuid=value).first()
         if db_customer is None:
             raise NotFound
         return db_customer
 
-    def to_url(self, db_customer):  # used in reverse routing
+    def to_url(self, value):  # used in reverse routing
         ''' Convert Customer object to customer UUID '''
-        return str(db_customer)
+        return str(value)
 
 
 class OrderConverter(BaseConverter):
@@ -411,16 +408,16 @@ class OrderConverter(BaseConverter):
     the order's ID.
     """
 
-    def to_python(self, order_id):  # used in routing
+    def to_python(self, value):  # used in routing
         ''' Convert order ID to Order object '''
-        db_order = Order.query.filter_by(id=order_id).first()
+        db_order = Order.query.filter_by(id=value).first()
         if db_order is None:
             raise NotFound
         return db_order
 
-    def to_url(self, db_order):  # used in reverse routing
+    def to_url(self, value):  # used in reverse routing
         ''' Convert Order object to order ID '''
-        return str(db_order)
+        return str(value)
 
 
 class ProductOrderConverter(BaseConverter):
@@ -430,17 +427,17 @@ class ProductOrderConverter(BaseConverter):
     is based on the product order's ID.
     """
 
-    def to_python(self, productOrder_id):  # used in routing
+    def to_python(self, value):  # used in routing
         ''' Convert product order ID to ProductOrder object '''
         db_product_order = ProductOrder.query.filter_by(
-            id=productOrder_id).first()
+            id=value).first()
         if db_product_order is None:
             raise NotFound
         return db_product_order
 
-    def to_url(self, db_product_order):  # used in reverse routing
+    def to_url(self, value):  # used in reverse routing
         ''' Convert ProductOrder object to product order ID '''
-        return str(db_product_order)
+        return str(value)
 
 
 class StockConverter(BaseConverter):
@@ -450,13 +447,13 @@ class StockConverter(BaseConverter):
     based on the stock's product ID.
     """
 
-    def to_python(self, productId):  # used in routing
+    def to_python(self, value):  # used in routing
         ''' Convert product ID to Stock object '''
-        db_stock = Stock.query.filter_by(productId=productId).first()
+        db_stock = Stock.query.filter_by(productId=value).first()
         if db_stock is None:
             raise NotFound
         return db_stock
 
-    def to_url(self, db_stock):  # used in reverse routing
+    def to_url(self, value):  # used in reverse routing
         ''' Convert Stock object to product ID '''
-        return str(db_stock)
+        return str(value)

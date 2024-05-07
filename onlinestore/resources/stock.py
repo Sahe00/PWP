@@ -12,7 +12,7 @@ from flasgger import swag_from
 from onlinestore import db
 from onlinestore.models import Stock, Product
 from onlinestore.utils import InventoryBuilder, create_error_response
-from onlinestore.constants import *
+from onlinestore.constants import JSON, MASON, LINK_RELATIONS_URL, STOCK_PROFILE
 
 
 class StockCollection(Resource):
@@ -112,10 +112,10 @@ class StockItem(Resource):
         product_request_body = db.session.query(Product).filter(
             Product.id == request.json["productId"]).first()
         if product_request_body is None:
-            id = request.json["productId"]
+            product_id = request.json["productId"]
             return create_error_response(
                 404, "Not found",
-                f"Product with ID {id} not found"
+                f"Product with ID {product_id} not found"
             )
 
         # Ensure productId is the same as the one in the URI, productId cannot be modified
