@@ -69,4 +69,4 @@ __If tests are failing, try deleting temp.db and database_test.db, then rerun th
 
 ### Run client
     cd Client
-    python main2.py
+    python main.py
