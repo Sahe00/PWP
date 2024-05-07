@@ -525,6 +525,9 @@ class MainWindow(QMainWindow):
                                     product_id = int(prod["@controls"]["self"]["href"].split("/")[-2])
                                     break
                             quantity = int(products_table.item(i, 1).text())
+                            if check_stock_for_product(product_id) < quantity:
+                                QMessageBox.warning(dialog, "Invalid quantity", f"Insufficient stock for product: {products_table.item(i, 0).text()}")
+                                return
                             product_orders.append({
                                 "productId": product_id,
                                 "orderId": int(order_id),
@@ -565,6 +568,15 @@ class MainWindow(QMainWindow):
                     else:
                         print(f"Failed to update stock: {r.text}")
 
+                def check_stock_for_product(product_id):
+                    ctrl = {
+                        "method": "get",
+                        "href": f"/api/stock/{product_id}/"
+                    }
+                    with requests.Session() as s:
+                        r = self.send_request(s, ctrl, None)
+                        stock = r.json()
+                        return stock["quantity"]
 
                 # Call the damn thing
                 select_products_for_order(order_id)
