@@ -181,8 +181,8 @@ class MainWindow(QMainWindow):
         self.edit_stock_button.clicked.connect(self.edit_stock)
         # Stock table
         self.stock_dict = {}
-        self.stock_table = QTableWidget(0, 2)
-        self.stock_table.setHorizontalHeaderLabels(["Product ID", "Quantity"])
+        self.stock_table = QTableWidget(0, 3)
+        self.stock_table.setHorizontalHeaderLabels(["Product ID", "Quantity", "Name"])
         self.stock_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.stock_layout.addWidget(self.stock_buttons)
         self.stock_layout.addWidget(self.stock_table)
@@ -885,12 +885,18 @@ class MainWindow(QMainWindow):
         for p in stock:
             row = self.stock_table.rowCount()
             self.stock_table.insertRow(row)
+            
+            # Set product name on 3rd column
+            product_name = self.products_dict["products"][row]["name"]
+            item = QTableWidgetItem(str(product_name))
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            self.stock_table.setItem(row, 2, item)
+            
+            # Set product ID and quantity on 1st and 2nd columns
             for i, key in enumerate(["productId", "quantity"]):
                 item = QTableWidgetItem(str(p[key]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 self.stock_table.setItem(row, i, item)
-
-
 
     def edit_stock(self):
         selected_indexes = self.stock_table.selectionModel().selectedIndexes()
