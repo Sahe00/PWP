@@ -191,6 +191,8 @@ class InventoryBuilder(MasonBuilder):
 
     def add_control_customer_to_order(self, order):
         ''' Add control to get customer to order '''
+        if order.customer is None:
+            return
         self.add_control(
             "order:by-customer",
             url_for("api.customeritem", customer=order.customer.uuid),
