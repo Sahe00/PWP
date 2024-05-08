@@ -1,19 +1,16 @@
 import sys
-import os
-import threading
-from datetime import datetime
-from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QVBoxLayout, QWidget, QPushButton, QLabel, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QDialog
-from PySide6.QtWidgets import *
-from PySide6.QtCore import QObject, Signal, Slot, Qt
-import socket
-import logging
 import json
 import requests
+from datetime import datetime
+from PySide6.QtWidgets import *
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QTabWidget, QVBoxLayout, QWidget,
+    QPushButton, QLabel, QLineEdit, QTableWidget, QTableWidgetItem, QDialog
+)
 
 
-
-#class OrderDialog(QDialog):
+# class OrderDialog(QDialog):
 #    def __init__(self, customer_uuid, order_id, parent=None):
 #        super().__init__(parent)
 #        self.setWindowTitle("Create Order")
@@ -52,7 +49,7 @@ class MainWindow(QMainWindow):
         self.API_URL = "http://localhost:5000"
 
         self.setWindowTitle("Onlinestore")
-        self.resize(800,600)
+        self.resize(800, 600)
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -92,7 +89,8 @@ class MainWindow(QMainWindow):
         # Customers table
         self.customers_dict = {}
         self.customers_table = QTableWidget(0, 5)
-        self.customers_table.setHorizontalHeaderLabels(["UUID", "First name", "Last name", "Email", "Phone number"])
+        self.customers_table.setHorizontalHeaderLabels(
+            ["UUID", "First name", "Last name", "Email", "Phone number"])
         self.customers_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         # self.layout.addWidget(self.customers_table)
         self.customer_layout.addWidget(self.customer_buttons)
@@ -231,7 +229,6 @@ class MainWindow(QMainWindow):
             # s = c["firstName"] + " " + c["lastName"]
             # self.customers_table.setItem(row, 0, QTableWidgetItem(s.strip()))
 
-
     def edit_customer(self):
         selected_indexes = self.customers_table.selectionModel().selectedIndexes()
         if not selected_indexes:
@@ -293,7 +290,8 @@ class MainWindow(QMainWindow):
 
         row = selected_indexes[0].row()
         customer_uuid = self.customers_table.item(row, 0).text()
-        customer_name = self.customers_table.item(row, 1).text() + " " + self.customers_table.item(row, 2).text()
+        customer_name = self.customers_table.item(
+            row, 1).text() + " " + self.customers_table.item(row, 2).text()
 
         dialog = QDialog(self)
         dialog.setWindowTitle("Are you sure?")
@@ -309,12 +307,14 @@ class MainWindow(QMainWindow):
                 href = self.customers_dict["@controls"]["self"]["href"]
                 r = s.delete(f"{self.API_URL}{href}{customer_uuid}/")
                 if r.status_code == 204:
-                    QMessageBox.information(dialog, "Success", f"Customer {customer_name} deleted successfully")
+                    QMessageBox.information(dialog, "Success", f"Customer {
+                                            customer_name} deleted successfully")
                     print(f"Customer {customer_name} deleted successfully")
                     self.statusBar().showMessage(f"Customer {customer_name} deleted successfully")
                     self.get_customers()
                 else:
-                    QMessageBox.warning(dialog, "Failed", f"Failed to delete Customer {customer_name}: {r.text}")
+                    QMessageBox.warning(dialog, "Failed", f"Failed to delete Customer {
+                                        customer_name}: {r.text}")
                     print(f"Failed to delete Customer {customer_name}: {r.text}")
                     message = r.json()["@error"]["@messages"][0]
                     self.statusBar().showMessage(f"Error: {message}")
@@ -351,7 +351,6 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(str(o[key]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 self.orders_table.setItem(row, i, item)
-
 
     def open_order(self):
         selected_indexes = self.orders_table.selectionModel().selectedIndexes()
@@ -397,13 +396,14 @@ class MainWindow(QMainWindow):
                 product_data = r.json()
                 products_table.setItem(row, 0, QTableWidgetItem(product_data["name"]))
                 products_table.setItem(row, 1, QTableWidgetItem(str(po["quantity"])))
-                products_table.setItem(row, 2, QTableWidgetItem(str(product_data["price"] * po["quantity"])))
+                products_table.setItem(row, 2, QTableWidgetItem(
+                    str(product_data["price"] * po["quantity"])))
                 total_sum += product_data["price"] * po["quantity"]
 
         sum_display.addWidget(QLabel(str(total_sum)))
         dialog_layout.addLayout(sum_display)
 
-        #maybe get customer info too
+        # maybe get customer info too
 
         self.statusBar().showMessage(f"Order {order_id} opened")
         dialog.exec()
@@ -435,12 +435,14 @@ class MainWindow(QMainWindow):
                 href = self.orders_dict["@controls"]["self"]["href"]
                 r = s.delete(f"{self.API_URL}{href}{order_id}/")
                 if r.status_code == 204:
-                    QMessageBox.information(dialog, "Success", f"Order {order_id} deleted successfully")
+                    QMessageBox.information(dialog, "Success", f"Order {
+                                            order_id} deleted successfully")
                     print(f"Order {order_id} deleted successfully")
                     self.statusBar().showMessage(f"Order {order_id} deleted successfully")
                     self.get_orders()
                 else:
-                    QMessageBox.warning(dialog, "Failed", f"Failed to delete order {order_id}: {r.text}")
+                    QMessageBox.warning(dialog, "Failed", f"Failed to delete order {
+                                        order_id}: {r.text}")
                     print(f"Failed to delete order {order_id}: {r.text}")
                     message = r.json()["@error"]["@messages"][0]
                     self.statusBar().showMessage(f"Error: {message}")
@@ -522,11 +524,16 @@ class MainWindow(QMainWindow):
                         if int(products_table.item(i, 1).text()) > 0:
                             for prod in self.products_dict["products"]:
                                 if prod["name"] == products_table.item(i, 0).text():
-                                    product_id = int(prod["@controls"]["self"]["href"].split("/")[-2])
+                                    product_id = int(prod["@controls"]["self"]
+                                                     ["href"].split("/")[-2])
                                     break
                             quantity = int(products_table.item(i, 1).text())
                             if check_stock_for_product(product_id) < quantity:
-                                QMessageBox.warning(dialog, "Invalid quantity", f"Insufficient stock for product: {products_table.item(i, 0).text()}")
+                                QMessageBox.warning(
+                                    dialog, "Invalid quantity",
+                                    f"Insufficient stock for product: {
+                                        products_table.item(i, 0).text()}"
+                                )
                                 return
                             product_orders.append({
                                 "productId": product_id,
@@ -541,7 +548,6 @@ class MainWindow(QMainWindow):
                                 reduce_stock(s, po)
                             else:
                                 print(f"Failed to create product order: {r.text}")
-
 
                     dialog.accept()
                     self.get_orders()
@@ -616,7 +622,8 @@ class MainWindow(QMainWindow):
 
             # Validate input data
             if not all([first_name, last_name, email]) or '@' not in email:
-                QMessageBox.warning(dialog, "Invalid Input", "Check all the fields and provide valid inputs.")
+                QMessageBox.warning(dialog, "Invalid Input",
+                                    "Check all the fields and provide valid inputs.")
                 return
 
             ctrl = {
@@ -636,7 +643,8 @@ class MainWindow(QMainWindow):
                 r = self.send_request(s, ctrl, data)
                 if r.status_code == 201:
                     # print(f"Customer created successfully: {first_name} {last_name}")
-                    QMessageBox.information(dialog, "Success", f"Customer {first_name} {last_name} created successfully.")
+                    QMessageBox.information(dialog, "Success", f"Customer {first_name} {
+                                            last_name} created successfully.")
                     dialog.accept()
                     self.get_customers()
                 else:
@@ -646,7 +654,6 @@ class MainWindow(QMainWindow):
 
         save_button.clicked.connect(submit_customer)
         dialog.exec()
-
 
     def get_products(self):
         self.statusBar().showMessage("Getting products...")
@@ -665,7 +672,6 @@ class MainWindow(QMainWindow):
             print(f"An error occurred: {e}")
             self.statusBar().showMessage(f"An error occurred: {e}")
 
-
     def show_products(self, products):
         self.products_table.setRowCount(0)
         for p in products:
@@ -675,8 +681,6 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(str(p[key]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 self.products_table.setItem(row, i, item)
-
-
 
     def edit_product(self):
         selected_indexes = self.products_table.selectionModel().selectedIndexes()
@@ -735,8 +739,6 @@ class MainWindow(QMainWindow):
 
         dialog.exec()
 
-
-
     def create_product(self):
         # Create the dialog window
         dialog = QDialog(self)
@@ -764,7 +766,8 @@ class MainWindow(QMainWindow):
 
             # Validate input data
             if not all([name, desc, price]):
-                QMessageBox.warning(dialog, "Invalid Input", "Check all the fields and provide valid inputs.")
+                QMessageBox.warning(dialog, "Invalid Input",
+                                    "Check all the fields and provide valid inputs.")
                 return
 
             ctrl = {
@@ -783,7 +786,8 @@ class MainWindow(QMainWindow):
                 r = self.send_request(s, ctrl, data)
                 if r.status_code == 201:
                     # print(f"Customer created successfully: {first_name} {last_name}")
-                    QMessageBox.information(dialog, "Success", f"Product {name} created successfully.")
+                    QMessageBox.information(dialog, "Success", f"Product {
+                                            name} created successfully.")
                     product_id = r.headers["Location"].rstrip('/').split('/')[-1]
                     create_stock_entry(product_id)
                     dialog.accept()
@@ -847,14 +851,16 @@ class MainWindow(QMainWindow):
             with requests.Session() as s:
                 r = s.delete(f"{self.API_URL}{href}")
                 if r.status_code == 204:
-                    QMessageBox.information(dialog, "Success", f"Product {product_name} deleted successfully")
+                    QMessageBox.information(dialog, "Success", f"Product {
+                                            product_name} deleted successfully")
                     print(f"Product {product_name} deleted successfully")
                     self.statusBar().showMessage(f"Product {product_name} deleted successfully")
                     self.get_products()
                     self.get_stock()
                     dialog.accept()
                 else:
-                    QMessageBox.warning(dialog, "Failed", f"Failed to delete Product {product_name}: {r.text}")
+                    QMessageBox.warning(dialog, "Failed", f"Failed to delete Product {
+                                        product_name}: {r.text}")
                     print(f"Failed to delete Product {product_name}: {r.text}")
                     dialog.reject()
 
@@ -885,13 +891,13 @@ class MainWindow(QMainWindow):
         for p in stock:
             row = self.stock_table.rowCount()
             self.stock_table.insertRow(row)
-            
+
             # Set product name on 3rd column
             product_name = self.products_dict["products"][row]["name"]
             item = QTableWidgetItem(str(product_name))
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             self.stock_table.setItem(row, 2, item)
-            
+
             # Set product ID and quantity on 1st and 2nd columns
             for i, key in enumerate(["productId", "quantity"]):
                 item = QTableWidgetItem(str(p[key]))
@@ -943,7 +949,7 @@ class MainWindow(QMainWindow):
                     print("Stock entry updated successfully")
                     self.statusBar().showMessage("Stock entry updated successfully")
                     dialog.accept()
-                    self.get_stock() # Update view
+                    self.get_stock()  # Update view
                 else:
                     print(f"Failed to update stock: {r.text}")
                     message = r.json()["@error"]["@messages"][0]
@@ -957,8 +963,6 @@ class MainWindow(QMainWindow):
 
         dialog.exec()
 
-
-
     # Utils:
 
     def send_request(self, s, ctrl, data):
@@ -970,6 +974,7 @@ class MainWindow(QMainWindow):
             headers={"Content-type": "application/json"}
         )
         return r
+
 
 if __name__ == "__main__":
     app = QApplication([])
