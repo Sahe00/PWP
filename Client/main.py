@@ -1,3 +1,5 @@
+""" Client for testing Onlinestore API"""
+
 import sys
 import json
 import requests
@@ -9,40 +11,8 @@ from PySide6.QtWidgets import (
     QPushButton, QLabel, QLineEdit, QTableWidget, QTableWidgetItem, QDialog
 )
 
-
-# class OrderDialog(QDialog):
-#    def __init__(self, customer_uuid, order_id, parent=None):
-#        super().__init__(parent)
-#        self.setWindowTitle("Create Order")
-#
-#        self.customer_uuid = customer_uuid
-#        self.order_id = order_id
-#
-#        # Initialize UI components
-#        dialog_layout = QVBoxLayout(self)
-#
-#        # Create dropdown menu
-#        self.product_combobox = QComboBox(self)
-#        dialog_layout.addWidget(QLabel("Select Product(s):"))
-#        dialog_layout.addWidget(self.product_combobox)
-#
-#        # List product names in the dropdown menu
-#        self.get_products()  # Fetch products (assuming this method exists)
-#        products = self.products_dict["products"]
-#        for prod in products:
-#            self.product_combobox.addItem(prod["name"])
-#
-#        self.submit_button = QPushButton("Submit", self)
-#        dialog_layout.addWidget(self.submit_button)
-#        self.submit_button.clicked.connect(self.submit_order)
-#
-#    def submit_order(self):
-#        selected_product = self.product_combobox.currentText()
-#        print(f"Selected Product: {selected_product}")
-#        # Perform further actions with the selected product and order details
-
-
 class MainWindow(QMainWindow):
+    ''' Main window for the client application '''
     def __init__(self):
         super().__init__()
 
@@ -195,12 +165,14 @@ class MainWindow(QMainWindow):
 # ----- METHODS --------------------------------------------
 
     def auto_refresh(self):
+        '''Automatically refresh data on start'''
         self.get_customers()
         self.get_orders()
         self.get_products()
         self.get_stock()
 
     def get_customers(self):
+        ''' Get customers from the API'''
         self.statusBar().showMessage("Getting customers...")
         s = requests.Session()
         ctrl = {
@@ -218,6 +190,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"An error occurred: {e}")
 
     def show_customers(self, customers):
+        ''' Show customers in the table'''
         self.customers_table.setRowCount(0)
         for c in customers:
             row = self.customers_table.rowCount()
@@ -230,6 +203,7 @@ class MainWindow(QMainWindow):
             # self.customers_table.setItem(row, 0, QTableWidgetItem(s.strip()))
 
     def edit_customer(self):
+        ''' Edit customer button functionality'''
         selected_indexes = self.customers_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to edit")
@@ -250,22 +224,23 @@ class MainWindow(QMainWindow):
         dialog.setWindowTitle("Edit Customer")
         dialog_layout = QVBoxLayout(dialog)
 
-        self.edit_fields = {}
+        edit_fields = {}
         for i, key in enumerate(["firstName", "lastName", "email", "phone"]):
             label = QLabel(key)
             dialog_layout.addWidget(label)
             line_edit = QLineEdit(self.customers_table.item(row, i+1).text())
             dialog_layout.addWidget(line_edit)
-            self.edit_fields[key] = line_edit
+            edit_fields[key] = line_edit
 
         save_button = QPushButton("Save")
         dialog_layout.addWidget(save_button)
-        save_button.clicked.connect(lambda: self.save_customer(dialog, customer_id, ctrl))
+        save_button.clicked.connect(lambda: self.save_customer(dialog, edit_fields, ctrl))
 
         dialog.exec()
 
-    def save_customer(self, dialog, customer_id, ctrl):
-        data = {key: line_edit.text() for key, line_edit in self.edit_fields.items()}
+    def save_customer(self, dialog, edit_fields, ctrl):
+        ''' Save customer button functionality'''
+        data = {key: line_edit.text() for key, line_edit in edit_fields.items()}
         s = requests.Session()
         try:
             r = self.send_request(s, ctrl, data)
@@ -282,6 +257,7 @@ class MainWindow(QMainWindow):
             print(f"Error occurred: {e}")
 
     def delete_customer(self):
+        ''' Delete customer button functionality'''
         selected_indexes = self.customers_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to delete")
@@ -307,15 +283,15 @@ class MainWindow(QMainWindow):
                 href = self.customers_dict["@controls"]["self"]["href"]
                 r = s.delete(f"{self.API_URL}{href}{customer_uuid}/")
                 if r.status_code == 204:
-                    QMessageBox.information(dialog, "Success", f"Customer {
-                                            customer_name} deleted successfully")
-                    print(f"Customer {customer_name} deleted successfully")
-                    self.statusBar().showMessage(f"Customer {customer_name} deleted successfully")
+                    msg = f"Customer {customer_name} deleted successfully"
+                    QMessageBox.information(dialog, "Success", msg)
+                    print(msg)
+                    self.statusBar().showMessage(msg)
                     self.get_customers()
                 else:
-                    QMessageBox.warning(dialog, "Failed", f"Failed to delete Customer {
-                                        customer_name}: {r.text}")
-                    print(f"Failed to delete Customer {customer_name}: {r.text}")
+                    msg = f"Failed to delete Customer {customer_name}: {r.text}"
+                    QMessageBox.warning(dialog, "Failed", msg)
+                    print(msg)
                     message = r.json()["@error"]["@messages"][0]
                     self.statusBar().showMessage(f"Error: {message}")
 
@@ -325,6 +301,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def get_orders(self):
+        ''' Get orders from the API'''
         self.statusBar().showMessage("Getting orders...")
         s = requests.Session()
         ctrl = {
@@ -343,6 +320,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"An error occurred: {e}")
 
     def show_orders(self, orders):
+        ''' Show orders in the table'''
         self.orders_table.setRowCount(0)
         for o in orders:
             row = self.orders_table.rowCount()
@@ -353,6 +331,7 @@ class MainWindow(QMainWindow):
                 self.orders_table.setItem(row, i, item)
 
     def open_order(self):
+        ''' Open order button functionality'''
         selected_indexes = self.orders_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to open")
@@ -409,9 +388,11 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def edit_order(self):
+        ''' Edit order button functionality'''
         pass
 
     def delete_order(self):
+        ''' Delete order button functionality'''
         selected_indexes = self.orders_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to delete")
@@ -435,15 +416,15 @@ class MainWindow(QMainWindow):
                 href = self.orders_dict["@controls"]["self"]["href"]
                 r = s.delete(f"{self.API_URL}{href}{order_id}/")
                 if r.status_code == 204:
-                    QMessageBox.information(dialog, "Success", f"Order {
-                                            order_id} deleted successfully")
-                    print(f"Order {order_id} deleted successfully")
-                    self.statusBar().showMessage(f"Order {order_id} deleted successfully")
+                    msg = f"Order {order_id} deleted successfully"
+                    QMessageBox.information(dialog, "Success", msg)
+                    print(msg)
+                    self.statusBar().showMessage(msg)
                     self.get_orders()
                 else:
-                    QMessageBox.warning(dialog, "Failed", f"Failed to delete order {
-                                        order_id}: {r.text}")
-                    print(f"Failed to delete order {order_id}: {r.text}")
+                    msg = f"Failed to delete order {order_id}: {r.text}"
+                    QMessageBox.warning(dialog, "Failed", msg)
+                    print(msg)
                     message = r.json()["@error"]["@messages"][0]
                     self.statusBar().showMessage(f"Error: {message}")
 
@@ -453,6 +434,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def create_order(self):
+        ''' Create order for customer button functionality'''
         # Select customer for order
         selected_indexes = self.customers_table.selectionModel().selectedIndexes()
         if not selected_indexes:
@@ -482,7 +464,7 @@ class MainWindow(QMainWindow):
                 print(f"Order created successfully: {order_id}")
                 self.statusBar().showMessage(f"Order created successfully: {order_id}")
 
-                def select_products_for_order(order_id):
+                def select_products_for_order():
                     dialog = QDialog(self)
                     dialog.setWindowTitle("Select products for order")
                     dialog_layout = QVBoxLayout(dialog)
@@ -529,11 +511,9 @@ class MainWindow(QMainWindow):
                                     break
                             quantity = int(products_table.item(i, 1).text())
                             if check_stock_for_product(product_id) < quantity:
-                                QMessageBox.warning(
-                                    dialog, "Invalid quantity",
-                                    f"Insufficient stock for product: {
-                                        products_table.item(i, 0).text()}"
-                                )
+                                msg = "Insufficient stock for product: "
+                                msg += f"{products_table.item(i, 0).text()}"
+                                QMessageBox.warning(dialog, "Invalid quantity",msg)
                                 return
                             product_orders.append({
                                 "productId": product_id,
@@ -585,7 +565,7 @@ class MainWindow(QMainWindow):
                         return stock["quantity"]
 
                 # Call the damn thing
-                select_products_for_order(order_id)
+                select_products_for_order()
             else:
                 print(f"Failed to create order: {r.text}")
                 message = r.json()["@error"]["@messages"][0]
@@ -595,6 +575,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"Error occurred: {e}")
 
     def create_customer(self):
+        ''' Create customer button functionality'''
         # Create the dialog window
         dialog = QDialog(self)
         dialog.setWindowTitle("Create Customer")
@@ -643,8 +624,8 @@ class MainWindow(QMainWindow):
                 r = self.send_request(s, ctrl, data)
                 if r.status_code == 201:
                     # print(f"Customer created successfully: {first_name} {last_name}")
-                    QMessageBox.information(dialog, "Success", f"Customer {first_name} {
-                                            last_name} created successfully.")
+                    msg = f"Customer {first_name} {last_name} created successfully."
+                    QMessageBox.information(dialog, msg)
                     dialog.accept()
                     self.get_customers()
                 else:
@@ -656,6 +637,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def get_products(self):
+        ''' Get products from the API'''
         self.statusBar().showMessage("Getting products...")
         s = requests.Session()
         ctrl = {
@@ -673,6 +655,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"An error occurred: {e}")
 
     def show_products(self, products):
+        ''' Show products in the table'''
         self.products_table.setRowCount(0)
         for p in products:
             row = self.products_table.rowCount()
@@ -683,6 +666,7 @@ class MainWindow(QMainWindow):
                 self.products_table.setItem(row, i, item)
 
     def edit_product(self):
+        ''' Edit product button functionality'''
         selected_indexes = self.products_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to edit")
@@ -690,7 +674,7 @@ class MainWindow(QMainWindow):
             return
 
         row = selected_indexes[0].row()
-        product_name = self.products_table.item(row, 0).text()
+        # product_name = self.products_table.item(row, 0).text()
         href = self.products_dict["products"][row]["@controls"]["self"]["href"]
 
         with requests.Session() as s:
@@ -735,11 +719,12 @@ class MainWindow(QMainWindow):
 
         save_button = QPushButton("Save")
         dialog_layout.addWidget(save_button)
-        save_button.clicked.connect(lambda: save_product())
+        save_button.clicked.connect(lambda: save_product()) # Lambda is necessary
 
         dialog.exec()
 
     def create_product(self):
+        ''' Create product button functionality'''
         # Create the dialog window
         dialog = QDialog(self)
         dialog.setWindowTitle("Create Product")
@@ -786,8 +771,8 @@ class MainWindow(QMainWindow):
                 r = self.send_request(s, ctrl, data)
                 if r.status_code == 201:
                     # print(f"Customer created successfully: {first_name} {last_name}")
-                    QMessageBox.information(dialog, "Success", f"Product {
-                                            name} created successfully.")
+                    msg = f"Product {name} created successfully."
+                    QMessageBox.information(dialog, "Success", msg)
                     product_id = r.headers["Location"].rstrip('/').split('/')[-1]
                     create_stock_entry(product_id)
                     dialog.accept()
@@ -813,7 +798,7 @@ class MainWindow(QMainWindow):
                 s = requests.Session()
                 r = self.send_request(s, ctrl, data)
                 if r.status_code == 201:
-                    print(f"Stock entry created successfully")
+                    print("Stock entry created successfully")
                     self.get_products()
                     self.get_stock()
                 else:
@@ -829,6 +814,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def delete_product(self):
+        ''' Delete product button functionality'''
         selected_indexes = self.products_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to delete")
@@ -851,17 +837,17 @@ class MainWindow(QMainWindow):
             with requests.Session() as s:
                 r = s.delete(f"{self.API_URL}{href}")
                 if r.status_code == 204:
-                    QMessageBox.information(dialog, "Success", f"Product {
-                                            product_name} deleted successfully")
-                    print(f"Product {product_name} deleted successfully")
-                    self.statusBar().showMessage(f"Product {product_name} deleted successfully")
+                    msg = f"Product {product_name} deleted successfully"
+                    QMessageBox.information(dialog, "Success", msg)
+                    print(msg)
+                    self.statusBar().showMessage(msg)
                     self.get_products()
                     self.get_stock()
                     dialog.accept()
                 else:
-                    QMessageBox.warning(dialog, "Failed", f"Failed to delete Product {
-                                        product_name}: {r.text}")
-                    print(f"Failed to delete Product {product_name}: {r.text}")
+                    msg = f"Failed to delete Product {product_name}: {r.text}"
+                    QMessageBox.warning(dialog, "Failed", msg)
+                    print(msg)
                     dialog.reject()
 
         yes_button.clicked.connect(lambda: delete_product_confirm())
@@ -870,6 +856,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def get_stock(self):
+        ''' Get stock from the API'''
         self.statusBar().showMessage("Getting stock...")
         s = requests.Session()
         ctrl = {
@@ -887,6 +874,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"An error occurred: {e}")
 
     def show_stock(self, stock):
+        ''' Show stock in the table'''
         self.stock_table.setRowCount(0)
         for p in stock:
             row = self.stock_table.rowCount()
@@ -905,6 +893,7 @@ class MainWindow(QMainWindow):
                 self.stock_table.setItem(row, i, item)
 
     def edit_stock(self):
+        ''' Edit stock button functionality'''
         selected_indexes = self.stock_table.selectionModel().selectedIndexes()
         if not selected_indexes:
             print("Please select a row to edit")
@@ -926,14 +915,14 @@ class MainWindow(QMainWindow):
         dialog_layout = QVBoxLayout(dialog)
 
         hlayout = QHBoxLayout()
-        label = QLabel(f"Product ID: ")
+        label = QLabel("Product ID: ")
         hlayout.addWidget(label)
         id_field = QLineEdit(self.stock_table.item(row, 0).text())
         id_field.setReadOnly(True)
         hlayout.addWidget(id_field)
         dialog_layout.addLayout(hlayout)
         hlayout = QHBoxLayout()
-        label = QLabel(f"Quantity: ")
+        label = QLabel("Quantity: ")
         hlayout.addWidget(label)
         line_edit = QLineEdit(self.stock_table.item(row, 1).text())
         hlayout.addWidget(line_edit)
@@ -975,7 +964,7 @@ class MainWindow(QMainWindow):
         )
         return r
 
-
+# Run the application
 if __name__ == "__main__":
     app = QApplication([])
 
