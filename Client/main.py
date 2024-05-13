@@ -2,13 +2,13 @@
 
 import sys
 import json
-import requests
 from datetime import datetime
-from PySide6.QtWidgets import *
+import requests
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QVBoxLayout, QWidget,
-    QPushButton, QLabel, QLineEdit, QTableWidget, QTableWidgetItem, QDialog
+    QPushButton, QLabel, QLineEdit, QTableWidget, QTableWidgetItem, QDialog,
+    QFormLayout, QHBoxLayout, QHeaderView, QMessageBox, QStatusBar
 )
 
 class MainWindow(QMainWindow):
