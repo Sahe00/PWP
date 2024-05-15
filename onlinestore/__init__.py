@@ -20,7 +20,7 @@ def create_app(test_config=None):
         "openapi": "3.0.3",
         "uiversion": 3
     }
-    # swagger = Swagger(app)
+    swagger = Swagger(app)
 
     default_config = {
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
