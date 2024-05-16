@@ -1,4 +1,7 @@
-""" Client for testing Onlinestore API"""
+'''
+Example client for the Onlinestore API, built with Qt.
+Sorry for the one-file mess, but it's just a simple example.
+'''
 
 import sys
 import json
@@ -12,7 +15,13 @@ from PySide6.QtWidgets import (
 )
 
 class MainWindow(QMainWindow):
-    ''' Main window for the client application '''
+    '''Example client for the Onlinestore API, built with Qt
+
+    Sorry for the one-file mess, but it's just a simple example.
+    __ini__ method builds the GUI
+    Other methods are for handling operations such as requests to the API
+    '''
+
     def __init__(self):
         super().__init__()
 
