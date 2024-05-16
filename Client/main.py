@@ -92,9 +92,9 @@ class MainWindow(QMainWindow):
         self.order_buttons_layout.addWidget(self.open_order_button)
         self.open_order_button.clicked.connect(self.open_order)
         # Edit order
-        self.edit_order_button = QPushButton("Edit")
-        self.order_buttons_layout.addWidget(self.edit_order_button)
-        self.edit_order_button.clicked.connect(self.edit_order)
+        # self.edit_order_button = QPushButton("Edit")
+        # self.order_buttons_layout.addWidget(self.edit_order_button)
+        # self.edit_order_button.clicked.connect(self.edit_order)
         # Delete order
         self.delete_order_button = QPushButton("Delete")
         self.order_buttons_layout.addWidget(self.delete_order_button)
